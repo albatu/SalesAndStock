@@ -1,0 +1,558 @@
+﻿@using Business.Interfaces
+@using Entities.Entities
+@using Blazor2.Models.Product
+@using Blazor2.ViewOperation.Interfaces
+@inject IProductService ProductService
+@inject DialogService DialogService
+@inject IProductViewService ProductViewService
+<style>
+    .row {
+        margin-bottom: 5px;
+    }
+
+    .rz-switch .rz-switch-circle:before {
+        background: #ffffff;
+        width: 5.26rem;
+        height: 1.26rem;
+        left: 0.27rem;
+        margin-top: -0.63rem;
+        border-radius: 15px;
+        transition-duration: 0.2s;
+        box-shadow: none;
+        CONTENT: "@Text";
+        padding-left: 5px;
+    }
+
+    .rz-switch .rz-switch-circle:before {
+        background: #ffffff;
+        width: 5.26rem;
+        height: 1.26rem;
+        left: 0.27rem;
+        margin-top: -0.63rem;
+        border-radius: 15px;
+        transition-duration: 0.2s;
+        box-shadow: none;
+        CONTENT: "@Text";
+        padding-left: 5px;
+    }
+
+    .rz-switch {
+        position: relative;
+        display: inline-block;
+        min-width: 3rem;
+        height: 1.8rem;
+        width: 100%;
+    }
+
+        .rz-switch .rz-switch-circle {
+            background: #ced4da;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+            border-radius: 15px;
+        }
+
+    .rz-dialog-titlebar {
+        background-color: rgb(230 236 239);
+        padding: 0.6875rem 1.25rem;
+        font-size: 1.25rem;
+        line-height: 1.875rem;
+        border-bottom: none;
+    }
+
+</style>
+<div class="row" style="background: #e6ecef; padding-top: 15px; border-radius: 5px; margin-left: 0; margin-right: 0; border: 1px solid #ccc;">
+    <div class="col-lg-2">
+        <RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px;width:100%" Text="Ürün Ekle" Click="@InsertRow" Disabled=@(entityToInsert != null) />
+    </div>
+    <div class="col-lg-2">
+        <RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px;width:100%" Text="Kategoriler" Click="@InsertCategory" />
+    </div>
+    <div class="col-lg-2">
+        <RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px;width:100%" Text="Markalar" Click="@InsertBrands" />
+    </div>
+    <div class="col-lg-2">
+        <RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px;width:100%" Text="Vergi Tipi" Click="@InsertTaxt" />
+    </div>
+    <div class="col-lg-4">
+        <RadzenTextBox @bind-Value="SearchText" Placeholder="Ürün ara..." @oninput=@(args => OnChange(args.Value.ToString(), "TextBox with change on every input")) Style="width:100%" />
+    </div>
+</div>
+
+
+
+
+
+<RadzenDataGrid @ref="stockGrid" AllowFiltering="true" AllowPaging="true" PageSize="5" AllowSorting="true" EditMode="DataGridEditMode.Single"
+                Data="@productList" TItem="ProductViewModel" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
+    <Template Context="context">
+        <ProductDetailsView Product="context" />
+    </Template>
+    <Columns>
+        <RadzenDataGridColumn TItem="ProductViewModel" Property="Id" Title="#ÜRÜN ID" Width="135px" />
+        <RadzenDataGridColumn TItem="ProductViewModel" Property="Name" Title="ÜRÜN DETAYLARI">
+            <Template Context="entity">
+
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Ürün Adı :" />
+                    </div>
+                    <div class="col-lg-8">
+                        <RadzenTextBox Disabled="true" @bind-Value="entity.Name" Style="width:100%" Placeholder="Ürün Adı" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Ürün Açıklaması :" />
+                    </div>
+                    <div class="col-lg-8">
+                        <RadzenTextArea Disabled="true" @bind-Value="entity.Description" Style="width:100%" Placeholder="Ürün Açıklaması" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Ürün Kodu :" />
+                    </div>
+                    <div class="col-lg-8">
+                        <RadzenTextBox Disabled="true" @bind-Value="entity.ProductCode" Style="width:100%" Placeholder="Ürün Kodu" />
+                    </div>
+                </div>
+
+            </Template>
+            <EditTemplate Context="entity">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Ürün Adı :" />
+                    </div>
+                    <div class="col-lg-8">
+                        <RadzenTextBox @bind-Value="entity.Name" Style="width:100%" Placeholder="Ürün Adı" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Ürün Açıklaması :" />
+                    </div>
+                    <div class="col-lg-8">
+                        <RadzenTextArea @bind-Value="entity.Description" Style="width:100%" Placeholder="Ürün Açıklaması" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Ürün Kodu :" />
+                    </div>
+                    <div class="col-lg-8">
+                        <RadzenTextBox @bind-Value="entity.ProductCode" Style="width:100%" Placeholder="Ürün Kodu" />
+                    </div>
+                </div>
+
+
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ProductViewModel" Property="Price" Title="ÜRÜN ÖZELLİKLERİ">
+            <Template Context="entity">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Ürün Fiyatı :" />
+                    </div>
+                    <div class="col-lg-8">
+                        <RadzenNumeric Disabled="true" @bind-Value="entity.Price" Style="width:100%" Placeholder="Ürün fiyatı" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Ağırlığı veya Litresi  :" />
+                    </div>
+                    <div class="col-lg-8">
+                        @if (entity.WeightUnit)
+                        {
+                            <RadzenNumeric Format="0 LT" Disabled="true" @bind-Value="entity.Weight" Style="width:100%" />
+                        }
+                        else
+                        {
+                            <RadzenNumeric Format="0 KG" Disabled="true" @bind-Value="entity.Weight" Style="width:100%" />
+                        }
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Ağırlık Türü :" />
+                    </div>
+                    <div class="col-lg-8">
+                        @if (entity.WeightUnit)
+                        {
+                            <RadzenNumeric Format="Litre" Disabled="true" @bind-Value="entity.Weight" Style="width:100%" />
+                        }
+                        else
+                        {
+                            <RadzenNumeric Format="Kilo Gram" Disabled="true" @bind-Value="entity.Weight" Style="width:100%" />
+                        }
+                    </div>
+                </div>
+
+            </Template>
+            <EditTemplate Context="entity">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Ürün Fiyatı :" />
+                    </div>
+                    <div class="col-lg-8">
+                        <RadzenNumeric @bind-Value="entity.Price" Style="width:100%" Placeholder="Ürün fiyatı" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Ağırlığı veya Litresi  :" />
+                    </div>
+                    <div class="col-lg-8">
+                        <RadzenNumeric @bind-Value="entity.Weight" Style="width:100%" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Ağırlık Türü :" />
+                    </div>
+                    <div class="col-lg-8">
+
+                        <RadzenRadioButtonList @bind-Value="entity.WeightUnit">
+                            <Items>
+                                <RadzenRadioButtonListItem Text="Litre" Value="true" />
+                                <RadzenRadioButtonListItem Text="Kilo Gram" Value="false" />
+
+                            </Items>
+                        </RadzenRadioButtonList>
+
+                    </div>
+                </div>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ProductViewModel" Property="CategoryId" Title="KATEGORİ/VERGİ/FİRMA">
+            <Template Context="entity">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Kategori Seç :" />
+                    </div>
+                    <div class="col-lg-8">
+                        <RadzenDropDown @bind-Value="entity.CategoryId" Data="@categoryList" Disabled="true"
+                                        TextProperty="CategoryName" ValueProperty="CategoryId"
+                                        Style="width:100%; display: block;" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Vergi Tipi Seç :" />
+                    </div>
+                    <div class="col-lg-8">
+
+                        <RadzenDropDownDataGrid TValue="int" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                AllowFiltering="true" AllowClear="true" @bind-Value="entity.TaxId" Disabled="true"
+                                                Data=@(taxtList) Style="width: 100%" AllowColumnResize="true"
+                                                TextProperty="Percentile" ValueProperty="TaxId" AllowFilteringByAllStringColumns="true">
+                            <Columns>
+
+                                <RadzenDropDownDataGridColumn Property="TaxId" Title="Vergi Id" Width="100px" />
+                                <RadzenDropDownDataGridColumn Property="TaxType" Title="Vergi Tipi" Width="200px" />
+                                <RadzenDropDownDataGridColumn Property="Percentile" Title="Yüzde %" Width="200px" />
+
+                            </Columns>
+                        </RadzenDropDownDataGrid>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Marka Seç :" />
+                    </div>
+                    <div class="col-lg-8">
+
+                        <RadzenDropDownDataGrid TValue="int" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                AllowFiltering="true" AllowClear="true" @bind-Value="entity.BrandId" Disabled="true"
+                                                Data=@(brandList) Style="width: 100%" AllowColumnResize="true"
+                                                TextProperty="BrandName" ValueProperty="BrandId" AllowFilteringByAllStringColumns="true">
+                            <Columns>
+
+                                <RadzenDropDownDataGridColumn Property="BrandId" Title="Marka Id" Width="100px" />
+                                <RadzenDropDownDataGridColumn Property="BrandName" Title="Marka Adı" Width="200px" />
+                                <RadzenDropDownDataGridColumn Property="BrandCompanyRepresentative" Title="Marka Yetkilisi" Width="100px" />
+                                <RadzenDropDownDataGridColumn Property="BrandPhone" Title="Marka Yetkili Telefonu" Width="100px" />
+
+
+                            </Columns>
+                        </RadzenDropDownDataGrid>
+                    </div>
+                </div>
+
+            </Template>
+            <EditTemplate Context="entity">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Kategori Seç :" />
+                    </div>
+                    <div class="col-lg-8">
+                        <RadzenDropDown @bind-Value="entity.CategoryId" Data="@categoryList"
+                                        TextProperty="CategoryName" ValueProperty="CategoryId"
+                                        Style="width:100%; display: block;" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Vergi Tipi Seç :" />
+                    </div>
+                    <div class="col-lg-8">
+
+                        <RadzenDropDownDataGrid TValue="int" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                AllowFiltering="true" AllowClear="true" @bind-Value="entity.TaxId"
+                                                Data=@(taxtList) Style="width: 100%" AllowColumnResize="true"
+                                                TextProperty="Percentile" ValueProperty="TaxId" AllowFilteringByAllStringColumns="true">
+                            <Columns>
+
+                                <RadzenDropDownDataGridColumn Property="TaxId" Title="Vergi Id" Width="100px" />
+                                <RadzenDropDownDataGridColumn Property="TaxType" Title="Vergi Tipi" Width="200px" />
+                                <RadzenDropDownDataGridColumn Property="Percentile" Title="Yüzde %" Width="200px" />
+
+                            </Columns>
+                        </RadzenDropDownDataGrid>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <RadzenLabel Text="Marka Seç :" />
+                    </div>
+                    <div class="col-lg-8">
+
+                        <RadzenDropDownDataGrid TValue="int" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                AllowFiltering="true" AllowClear="true" @bind-Value="entity.BrandId"
+                                                Data=@(brandList) Style="width: 100%" AllowColumnResize="true"
+                                                TextProperty="BrandName" ValueProperty="BrandId" AllowFilteringByAllStringColumns="true">
+                            <Columns>
+
+                                <RadzenDropDownDataGridColumn Property="BrandId" Title="Marka Id" Width="100px" />
+                                <RadzenDropDownDataGridColumn Property="BrandName" Title="Marka Adı" Width="200px" />
+                                <RadzenDropDownDataGridColumn Property="BrandCompanyRepresentative" Title="Marka Yetkilisi" Width="100px" />
+                                <RadzenDropDownDataGridColumn Property="BrandPhone" Title="Marka Yetkili Telefonu" Width="100px" />
+
+
+                            </Columns>
+                        </RadzenDropDownDataGrid>
+                    </div>
+                </div>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+
+
+
+        <RadzenDataGridColumn TItem="ProductViewModel" Context="sampleBlazorModelsSampleOrder" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="120px">
+            <Template Context="entity">
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Class="m-1" Click="@(args => EditRow(entity))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Primary" Class="m-1" Click="@((args) => SaveRow(entity))">
+                </RadzenButton>
+                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Class="m-1" Click="@((args) => CancelEdit(entity))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ProductViewModel" Context="entity" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="60px">
+            <Template Context="entity">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Class="m-1" Click="@(args => DeleteRow(entity))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Class="m-1" Click="@(args => DeleteRow(entity))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    RadzenDataGrid<ProductViewModel> stockGrid;
+    IList<ProductViewModel> productList;
+    IEnumerable<ProductViewModel> brandList;
+    IEnumerable<ProductViewModel> categoryList;
+    IList<ProductViewModel> taxtList;
+    public string Text { get; set; } = "Kilo Gram";
+    public string SearchText { get; set; }
+    protected override void OnInitialized()
+    {
+        productList = ProductViewService.GetProductList();
+        brandList = ProductViewService.BrandListing();
+        categoryList = ProductViewService.Categories();
+        taxtList = ProductViewService.TaxList();
+        DialogService.OnOpen += Open;
+        DialogService.OnClose += Close;
+        base.OnInitialized();
+
+
+    }
+
+    async Task EditRow(ProductViewModel entity)
+    {
+        await stockGrid.EditRow(entity);
+    }
+    void ChangeContentSwitch(bool value, string name)
+    {
+        if (value)
+        {
+            Text = "Litre";
+            StateHasChanged();
+        }
+        else
+        {
+            Text = "Kilo Gram";
+            StateHasChanged();
+        }
+    }
+    void OnUpdateRow(ProductViewModel entity)
+    {
+        ProductService.Update(ProductViewService.TEntity(entity));
+        brandList = ProductViewService.BrandListing();
+        categoryList = ProductViewService.Categories();
+        productList = ProductViewService.GetProductList();
+        taxtList = ProductViewService.TaxList();
+
+        StateHasChanged();
+    }
+
+    async Task SaveRow(ProductViewModel entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        await stockGrid.UpdateRow(entity);
+    }
+
+    void CancelEdit(ProductViewModel entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        stockGrid.CancelEditRow(entity);
+
+    }
+
+    async Task DeleteRow(ProductViewModel entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        if (productList.Contains(entity))
+        {
+
+            ProductService.Delete(ProductViewService.TEntity(entity));
+            productList = ProductViewService.GetProductList();
+            brandList = ProductViewService.BrandListing();
+            categoryList = ProductViewService.Categories();
+            taxtList = ProductViewService.TaxList();
+            StateHasChanged();
+        }
+        else
+        {
+            stockGrid.CancelEditRow(entity);
+        }
+    }
+
+    ProductViewModel entityToInsert;
+
+    async Task InsertRow()
+    {
+        entityToInsert = new ProductViewModel();
+        await stockGrid.InsertRow(entityToInsert);
+    }
+    void InsertCategory()
+    {
+        DialogService.Open<Blazor2.Pages.Category.CategoryView>($"Kategori İşlemleri",
+                new Dictionary<string, object>(),
+                new DialogOptions() { Width = "50%", Height = "60%", Resizable = true, Draggable = false, CloseDialogOnEsc = true });
+        productList = ProductViewService.GetProductList();
+        brandList = ProductViewService.BrandListing();
+        categoryList = ProductViewService.Categories();
+        taxtList = ProductViewService.TaxList();
+        StateHasChanged();
+    }
+    void InsertBrands()
+    {
+        DialogService.Open<Blazor2.Pages.Brands.BrandsView>($"Marka İşlemleri",
+                new Dictionary<string, object>(),
+                new DialogOptions() { Width = "70%", Height = "80%", Resizable = true, Draggable = false, CloseDialogOnEsc = true });
+        productList = ProductViewService.GetProductList();
+        brandList = ProductViewService.BrandListing();
+        categoryList = ProductViewService.Categories();
+        taxtList = ProductViewService.TaxList();
+        StateHasChanged();
+
+    }
+    void InsertTaxt()
+    {
+        DialogService.Open<Blazor2.Pages.Tax.TaxView>($"Vergi Sınıfı İşlemleri",
+                new Dictionary<string, object>(),
+                new DialogOptions() { Width = "70%", Height = "80%", Resizable = true, Draggable = false, CloseDialogOnEsc = true });
+        productList = ProductViewService.GetProductList();
+        brandList = ProductViewService.BrandListing();
+        categoryList = ProductViewService.Categories();
+        taxtList = ProductViewService.TaxList();
+        StateHasChanged();
+
+    }
+
+    void OnCreateRow(ProductViewModel entity)
+    {
+        ProductService.Insert(ProductViewService.TEntity(entity));
+        productList = ProductViewService.GetProductList();
+        brandList = ProductViewService.BrandListing();
+        categoryList = ProductViewService.Categories();
+        taxtList = ProductViewService.TaxList();
+    }
+    public void Dispose()
+    {
+        // The DialogService is a singleton so it is advisable to unsubscribe.
+        DialogService.OnOpen -= Open;
+        DialogService.OnClose -= Close;
+        productList = ProductViewService.GetProductList();
+        brandList = ProductViewService.BrandListing();
+        categoryList = ProductViewService.Categories();
+        taxtList = ProductViewService.TaxList();
+        StateHasChanged();
+    }
+
+    void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
+    {
+        productList = ProductViewService.GetProductList();
+        brandList = ProductViewService.BrandListing();
+        categoryList = ProductViewService.Categories();
+        taxtList = ProductViewService.TaxList();
+        StateHasChanged();
+    }
+
+    void Close(dynamic result)
+    {
+        productList = ProductViewService.GetProductList();
+        brandList = ProductViewService.BrandListing();
+        categoryList = ProductViewService.Categories();
+        taxtList = ProductViewService.TaxList();
+        StateHasChanged();
+    }
+    void OnChange(string value, string name)
+    {
+        if (value == null)
+        {
+            productList = ProductViewService.GetProductList();
+            StateHasChanged();
+        }
+        else if (value == "")
+        {
+            productList = ProductViewService.GetProductList();
+            StateHasChanged();
+        }
+        else
+        {
+            productList = ProductViewService.Search(value);
+            StateHasChanged();
+        }
+
+    }
+}

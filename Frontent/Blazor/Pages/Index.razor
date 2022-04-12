@@ -1,0 +1,36 @@
+﻿@using Business.Interfaces
+@using Entities.Entities
+@using Blazor2.Pages.Stock
+@using Blazor2.Pages.Sales
+@using Blazor2.Pages.Product
+@using Blazor2.Pages.Customer
+@inject ICategoryService CategoryService
+@page "/"
+<Style />
+<RadzenTabs Change=@OnChange TabPosition="@tabPosition" style="height: 100%; width: 100%; margin: 20px auto;" RenderMode="TabRenderMode.Client">
+    <Tabs>
+        <RadzenTabsItem Text="Stok İşlemleri">
+            <StockView />
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Satış İşlemleri">
+            <SalesView />
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Ürün İşlemleri">
+            <ProductView />
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Müşteri İşlemleri">
+            <CustomerView />
+        </RadzenTabsItem>
+
+    </Tabs>
+</RadzenTabs>
+@code {
+
+    TabPosition tabPosition = TabPosition.Top;
+
+
+    void OnChange(int index)
+    {
+
+    }
+}

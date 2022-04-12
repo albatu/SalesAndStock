@@ -1,0 +1,276 @@
+﻿@using Business.Interfaces
+@using Entities.Entities
+@using Blazor2.Models.Stock
+@using Radzen.Blazor.Rendering
+@using System.Linq.Dynamic.Core
+@using Blazor2.ViewOperation.Interfaces
+@inject IStockService StockService
+@inject IProductService ProductService
+@inject DialogService DialogService
+@inject IStockViewService StockViewService
+<Style />
+<div class="row">
+    <div class="col-lg-3">
+        <div class="row">
+            <div class="col-lg-12">
+                <RadzenLabel Text="Stok Operasyonları" />
+            </div>
+            <div class="col-lg-12">
+                <RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px;width:100%" Text="Stok Ekle" Click="@InsertRow" Disabled=@(entityToInsert != null) />
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="row">
+            <div class="col-lg-12">
+                <RadzenLabel Text="Başlangıç Tarihi" />
+            </div>
+            <div class="col-lg-12">
+                <RadzenDatePicker ShowTime="true" @bind-Value="StartDate" Style="width:100%"
+                                  ShowSeconds="true" HoursStep="1" MinutesStep="5" SecondsStep="10"
+                                  DateFormat="dd/MM/yyyy HH:mm" Class="w-100" />
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="row">
+            <div class="col-lg-12">
+                <RadzenLabel Text="Bitiş Tarihi" />
+            </div>
+            <div class="col-lg-12">
+                <RadzenDatePicker ShowTime="true" @bind-Value="FinishDate" Style="width:100%"
+                                  ShowSeconds="true" HoursStep="1" MinutesStep="5" SecondsStep="10"
+                                  DateFormat="dd/MM/yyyy HH:mm" Class="w-100" />
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="row">
+            <div class="col-lg-12">
+                <RadzenLabel Text="Filtreleme" />
+            </div>
+            <div class="col-lg-12">
+                <RadzenButton Icon="event" style="margin-bottom: 10px;width:100%" Text="Filtrele" Click="@DateToDate" ButtonStyle="ButtonStyle.Warning" />
+            </div>
+        </div>
+    </div>
+
+</div>
+<div class="row">
+    <div class="col-lg-2">
+        <RadzenButton Click="@FirstPage" Text="İlk Sayfa" Class="mr-2" ButtonStyle="ButtonStyle.Secondary" Style="width:100%" />
+    </div>
+    <div class="col-lg-2">
+        <RadzenButton Click="@TenthPage" Text="10th sayfa" Class="mr-2" ButtonStyle="ButtonStyle.Secondary" Style="width:100%" />
+    </div>
+    <div class="col-lg-2">
+        <RadzenButton Click="@LastPage" Text="Son Sayfa" Class="mr-2" ButtonStyle="ButtonStyle.Secondary" Style="width:100%" />
+    </div>
+    <div class="col-lg-2">
+        <RadzenLabel Text="Show pager summary" Component="CheckBox1" Style="margin-left: 5px;"/>
+        
+    </div>
+    <div class="col-lg-2">
+            <RadzenSwitch @bind-Value=@showPagerSummary  />
+
+    </div>
+
+</div>
+<RadzenDataGrid @ref=@stockGrid Data="@stockList" TItem="StockViewModel" AllowPaging="true"
+                PagerHorizontalAlign="HorizontalAlign.Center" AllowSorting="true" PageSize="10"
+                PageSizeOptions="pageSizeOptions" ShowPagingSummary="showPagerSummary" PagingSummaryFormat="@pagingSummaryFormat" Page="@OnPage">
+    <Columns>
+
+        <RadzenDataGridColumn TItem="StockViewModel" Property="Id" Filterable="true" Title="#SK" Frozen="true" Width="100px" TextAlign="TextAlign.Center" />
+
+        <RadzenDataGridColumn TItem="StockViewModel" Property="ProductName" Title="Ürün Adı" Width="200px">
+            <FilterTemplate>
+                <RadzenTextBox @oninput=@(args => OnChange(args.Value.ToString(), "TextBox with change on every input")) Style="width:100%" />
+            </FilterTemplate>
+            <EditTemplate Context="entity">
+                <RadzenDropDown AllowClear="true" TValue="int" AllowVirtualization="true" Class="w-100" @bind-Value="entity.ProductId"
+                                AllowFiltering="true" Data=@productsList TextProperty="ProductName" ValueProperty="ProductId" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="StockViewModel" Property="Price" Title="Ürün Fiyatı" Width="200px">
+            <Template Context="context">
+                @String.Format("{0:C2}", context.Price)
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="StockViewModel" Property="StockDate" Title="Stok Giriş Tarihi" FormatString="dd/MM/yyyy">
+            <Template Context="entity">
+                @entity.StockDate.ToString("dd/MM/yyyy HH:mm")
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenDatePicker ShowTime="true" @bind-Value="entity.StockDate"
+                                  ShowSeconds="true" HoursStep="1" MinutesStep="5" SecondsStep="10"
+                                  DateFormat="dd/MM/yyyy HH:mm" Class="w-100" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="StockViewModel" Property="Piece" Title="Adet" Width="380px">
+            <Template Context="order">
+                @if (order.Piece < 0)
+                {
+                    <RadzenButton Icon="privacy_tip" ButtonStyle="ButtonStyle.Light" Class="mr-1" Style="width: 100%;">
+                        <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="@order.Piece.ToString()" Style="background-color: #f9777f; font-size: x-large;" />
+                        adet Satış Sonrası düşümüştü
+
+                    </RadzenButton>
+
+                }
+                else
+                {
+                    <RadzenButton Icon="privacy_tip" ButtonStyle="ButtonStyle.Light" Class="mr-1" Style="width: 100%;">
+                        <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@order.Piece.ToString()" Style="background-color: #f9777f; font-size: x-large;" />
+                        adet Stok'a eklenmiştir
+
+                    </RadzenButton>
+
+                }
+            </Template>
+
+            <EditTemplate Context="entity">
+                <RadzenNumeric Format="c" @bind-Value="entity.Piece" Placeholder="Enter or clear value" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="StockViewModel" Context="order" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="60px">
+            <Template Context="order">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Medium" Class="m-1" Click="@(args => DeleteRow(order))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="order">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Medium" Class="m-1" Click="@(args => DeleteRow(order))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+@code {
+    [Parameter]
+    public string SearchText { get; set; }
+    [Parameter]
+    public int ProductId { get; set; }
+    RadzenDataGrid<StockViewModel> stockGrid;
+    IEnumerable<StockViewModel> stockList;
+    IEnumerable<StockViewModel> productsList;
+    string ProductName;
+    IEnumerable<int> pageSizeOptions = new int[] { 3, 5, 7 };
+    string pagingSummaryFormat = "{0} sayfadan {1} görüntüleniyor (toplam {2} kayıt bulunmaktadır.)";
+
+    bool showPagerSummary = true;
+
+    public DateTime StartDate { get; set; } = DateTime.Now.AddDays(-15);
+    public DateTime FinishDate { get; set; } = DateTime.Now;
+    async Task FirstPage()
+    {
+        await stockGrid.FirstPage();
+    }
+    async Task TenthPage()
+    {
+        await stockGrid.GoToPage(9);
+    }
+    async Task LastPage()
+    {
+        await stockGrid.LastPage();
+    }
+    protected override void OnInitialized()
+    {
+
+        stockList = StockViewService.Search(SearchText);
+        productsList = StockViewService.GetProductList();
+        DialogService.OnOpen += Open;
+        DialogService.OnClose += Close;
+
+    }
+    public void Dispose()
+    {
+        DialogService.OnOpen -= Open;
+        DialogService.OnClose -= Close;
+        stockList = StockViewService.Search(SearchText);
+        productsList = StockViewService.GetProductList();
+        StateHasChanged();
+    }
+
+    void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
+    {
+        stockList = StockViewService.Search(SearchText);
+        productsList = StockViewService.GetProductList();
+        StateHasChanged();
+    }
+
+    void Close(dynamic result)
+    {
+        stockList = StockViewService.Search(SearchText);
+        productsList = StockViewService.GetProductList();
+        StateHasChanged();
+    }
+    void EditRow(StockViewModel entity)
+    {
+        DialogService.Open<StockOperation>($"Stok Düzenle",
+                new Dictionary<string, object>() { { "Id", entity.Id } },
+                new DialogOptions() { Width = "50%", Height = "60%", Resizable = true, Draggable = false, CloseDialogOnEsc = true });
+        stockList = StockViewService.Search(SearchText);
+        productsList = StockViewService.GetProductList();
+        StateHasChanged();
+    }
+
+    void OnUpdateRow(StockViewModel entity)
+    {
+        StockService.Update(StockViewService.TEntity(entity));
+        stockList = StockViewService.Search(SearchText);
+        productsList = StockViewService.GetProductList();
+    }
+    void DeleteRow(StockViewModel entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        if (stockList.Contains(entity))
+        {
+
+            StockService.Delete(StockViewService.TEntity(entity));
+            stockGrid.Reload();
+            stockList = StockViewService.Search(SearchText);
+            productsList = StockViewService.GetProductList();
+        }
+        else
+        {
+            stockGrid.CancelEditRow(entity);
+            stockList = StockViewService.Search(SearchText);
+            productsList = StockViewService.GetProductList();
+        }
+    }
+
+    StockViewModel entityToInsert;
+    void InsertRow()
+    {
+        DialogService.Open<StockOperation>($"Stok Ekle",
+               new Dictionary<string, object>() { { "Id", 0 }, { "ProductId", ProductId } },
+               new DialogOptions() { Width = "50%", Height = "60%", Resizable = true, Draggable = false, CloseDialogOnEsc = true });
+        stockList = StockViewService.Search(SearchText);
+        productsList = StockViewService.GetProductList();
+        StateHasChanged();
+    }
+    void OnChange(string value, string name)
+    {
+        stockList = StockViewService.Search(value.ToLower());
+        StateHasChanged();
+    }
+    void DateToDate()
+    {
+        stockList = StockViewService.DateToDate(StartDate, FinishDate);
+        StateHasChanged();
+    }
+
+
+    void OnPage(PagerEventArgs args)
+    {
+        
+        //stockList = StockViewService.Paging(args.Skip, args.Top);
+        StateHasChanged();
+    }
+}

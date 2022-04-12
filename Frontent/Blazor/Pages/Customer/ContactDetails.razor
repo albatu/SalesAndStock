@@ -1,0 +1,188 @@
+﻿@using Business.Interfaces
+@using Entities.Entities
+@using Blazor2.Models.Customer
+@using Blazor2.ViewOperation.Interfaces
+@inject IContactService ContactService
+@inject NotificationService NotificationService
+@inject IContactDetailViewService ContactDetailViewService
+@inject ICustomerService CustomerService
+
+<RequiredStyle />
+<RadzenTemplateForm Data="@contact" Submit="@((ContactViewModel args) => { Submit(args); })">
+
+    <RadzenFieldset>
+        <div class="row">
+            <div class="col-lg-2">
+                <RadzenLabel Text="Adı Soyadı #" />
+            </div>
+            <div class="col-lg-10">
+                <RadzenDropDownDataGrid TValue="int" FilterCaseSensitivity="FilterCaseSensitivity.Default"
+                                        AllowFiltering="true" AllowClear="true" @bind-Value="contact.CustomerId"
+                                        Data=@(Customers) Style="width: 100%" AllowColumnResize="true"
+                                        TextProperty="FirstNameAndLastName" ValueProperty="CustomerId" AllowFilteringByAllStringColumns="true">
+                    <Columns>
+
+                        <RadzenDropDownDataGridColumn Property="CustomerId" Title="Müşteri Id" Width="100px" />
+                        <RadzenDropDownDataGridColumn Property="FirstNameAndLastName" Title="Müşteri Adı ve Soyadı" Width="200px" />
+
+                    </Columns>
+                </RadzenDropDownDataGrid>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2">
+                <RadzenLabel Text="Adresi" />
+            </div>
+            <div class="col-lg-10">
+                <RadzenTextArea @bind-Value="contact.AddressDetails" Placeholder="AddressDetails" style="width: 100%;" Name="AddressDetails" /><br />
+                <RadzenRequiredValidator Component="AddressDetails" Text="Adres boş geçilemez" Popup=@true Style="position: absolute" />
+                <br />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2">
+                <RadzenLabel Text="PostCode" />
+            </div>
+            <div class="col-lg-10">
+                <RadzenTextBox @bind-Value="contact.PostCode" Placeholder="Posta kodu" style="width: 100%;" Name="PostCode" /><br />
+                <RadzenRequiredValidator Component="PostCode" Text="Posta kodu boş geçilemez" Popup=@true Style="position: absolute" />
+                <br />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2">
+                <RadzenLabel Text="Şehir" />
+            </div>
+            <div class="col-lg-4">
+                <RadzenDropDownDataGrid TValue="int" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                        AllowFiltering="true" AllowClear="true" @bind-Value="contact.CityId"
+                                        Data=@(Cities) Style="width: 100%" AllowColumnResize="true"
+                                        Change=@(args => OnChange(args, "DropDown"))
+                                        TextProperty="CityName" ValueProperty="CityId" AllowFilteringByAllStringColumns="true">
+                    <Columns>
+
+                        <RadzenDropDownDataGridColumn Property="CityId" Title="Şehir ID" Width="100px" />
+                        <RadzenDropDownDataGridColumn Property="CityName" Title="Şehir Adı" Width="200px" />
+
+                    </Columns>
+                </RadzenDropDownDataGrid>
+            </div>
+            <div class="col-lg-2">
+                <RadzenLabel Text="İlçe" />
+            </div>
+            <div class="col-lg-4">
+                <RadzenDropDownDataGrid TValue="int" FilterCaseSensitivity="FilterCaseSensitivity.Default"
+                                        AllowFiltering="true" AllowClear="true" @bind-Value="contact.DistrictId"
+                                        Data=@(Districts) Style="width: 100%" AllowColumnResize="true"
+                                        TextProperty="DistrictName" ValueProperty="DistrictId" AllowFilteringByAllStringColumns="true">
+                    <Columns>
+
+                        <RadzenDropDownDataGridColumn Property="DistrictId" Title="İlçe ID" Width="100px" />
+                        <RadzenDropDownDataGridColumn Property="DistrictName" Title="İlçe Adı" Width="200px" />
+
+                    </Columns>
+                </RadzenDropDownDataGrid>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2">
+                <RadzenLabel Text="Telefonu" />
+            </div>
+            <div class="col-lg-10">
+                <RadzenMask Mask="(***) ***-****" CharacterPattern="[0-9]" Placeholder="(000) 000-0000" Name="Phone" @bind-Value=@contact.Phone Style="width: 100%;" /><br />
+                <RadzenRequiredValidator Component="Phone" Text="Telefon boş geçilemez." Popup=@true Style="position: absolute" />
+                <br />
+            </div>
+           
+        </div>
+    </RadzenFieldset>
+    <RadzenFieldset Style="margin-top:15px">
+        <div class="row" style="margin-bottom:5px">
+
+            <div class="col-lg-4">
+            </div>
+            <div class="col-lg-4">
+            </div>
+            <div class="col-lg-4">
+                <RadzenButton Text="Detayları Kaydet" Icon="save" ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" Style="float:right" />
+            </div>
+        </div>
+    </RadzenFieldset>
+</RadzenTemplateForm>
+
+
+@code {
+    [Parameter]
+    public int CustomerId { get; set; }
+    private List<ContactViewModel> Districts;
+    private List<ContactViewModel> Cities;
+    private List<ContactViewModel> Customers;
+    string customer;
+    ContactViewModel contact;
+    protected override void OnInitialized()
+    {
+        var getCustomer = CustomerService.GetById(CustomerId);
+        Districts = ContactDetailViewService.District();
+        if (getCustomer != null)
+        {
+            contact = ContactDetailViewService.GetByContact(CustomerId);
+            if (contact != null)
+            {
+                var getContract = ContactDetailViewService.GetByContact(CustomerId);
+
+            }
+
+        }
+        else
+        {
+            contact = new ContactViewModel
+                {
+                    CustomerId = getCustomer.Id,
+                    FirstName = getCustomer.FirstName,
+                    LastName = getCustomer.LastName,
+                    FirstNameAndLastName = getCustomer.FirstName + " " + getCustomer.LastName
+                };
+        }
+
+
+        Customers = ContactDetailViewService.GetByCustomerList(CustomerId);
+        Cities = ContactDetailViewService.GetCities();
+        
+        base.OnInitialized();
+    }
+    void Submit(ContactViewModel model)
+    {
+        if (model.Id == 0)
+        {
+            if (model.CustomerId == 0)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, "HATA MÜŞTERİ BOŞ GEÇİLEMEZ");
+            }
+            else if (model.CityId == 0)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, "HATA ŞEHİR BOŞ GEÇİLEMEZ");
+            }
+            else if (model.DistrictId == 0)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, "HATA İLÇE BOŞ GEÇİLEMEZ");
+            }
+            else
+            {
+                var contact = ContactService.Insert(ContactDetailViewService.TEntity(model));
+                NotificationService.Notify(NotificationSeverity.Info, contact.CustomerId.FirstName + " " + contact.CustomerId.LastName + " adlı müşterinin detayları eklenmiştir.");
+            }
+
+        }
+        else
+        {
+            var contact = ContactService.Update(ContactDetailViewService.TEntity(model));
+            NotificationService.Notify(NotificationSeverity.Info, contact.CustomerId.FirstName + " " + contact.CustomerId.LastName + " adlı müşterinin detayları düzenlenmiştir.");
+        }
+    }
+
+    void OnChange(object value, string name)
+    {
+        Districts = ContactDetailViewService.District((int)value);
+        StateHasChanged();
+    }
+}

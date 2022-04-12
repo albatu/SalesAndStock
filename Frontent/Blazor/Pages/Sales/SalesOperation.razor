@@ -1,0 +1,234 @@
+﻿@using Blazor2.Models.Sales
+@using Business.Interfaces
+@using Entities.Entities
+@inject ISalesService SalesService
+@inject IProductService ProductService
+@inject ITaxService TaxService
+@inject ICustomerService CustomerService
+@inject NotificationService NotificationService
+@inject IStockService StockService
+
+<RadzenTemplateForm Data="@entity" Submit="@((SalesViewModel args) => { Submit(args); })">
+    <RadzenFieldset Text="Satış işlemleri">
+        <div class="row" style="margin-bottom:5px">
+            <div class="align-items-center d-flex col-md-3">
+                <RadzenLabel Text="Ürün Seç" />
+            </div>
+            <div class="col-md-9">
+                <RadzenDropDownDataGrid TValue="int" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                        AllowFiltering="true" AllowClear="true" @bind-Value="entity.ProductId"
+                                        Data=@(productList) Style="width: 100%" AllowColumnResize="true"
+                                        TextProperty="ProductName" ValueProperty="ProductId" AllowFilteringByAllStringColumns="true">
+                    <Columns>
+                        <RadzenDropDownDataGridColumn Property="ProductId" Title="Id" Width="100px" />
+                        <RadzenDropDownDataGridColumn Property="ProductName" Title="Ürün Adı" Width="200px" />
+                        <RadzenDropDownDataGridColumn Property="BrandsName" Title="Marka" Width="100px" />
+                        <RadzenDropDownDataGridColumn Property="CateogryName" Title="Kategorisi" Width="100px" />
+                    </Columns>
+                </RadzenDropDownDataGrid>
+            </div>
+        </div>
+
+        <div class="row" style="margin-bottom:5px">
+            <div class="align-items-center d-flex col-md-3">
+                <RadzenLabel Text="Müşteri Seç" />
+            </div>
+            <div class="col-md-9">
+                <RadzenDropDownDataGrid TValue="int" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                        AllowFiltering="true" AllowClear="true" @bind-Value="entity.CustomerId"
+                                        Data=@(customertList) Style="width: 100%" AllowColumnResize="true"
+                                        TextProperty="CustomerFirstAndLastName" ValueProperty="CustomerId" AllowFilteringByAllStringColumns="true">
+                    <Columns>
+                        <RadzenDropDownDataGridColumn Property="CustomerId" Title="Id" Width="100px" />
+                        <RadzenDropDownDataGridColumn Property="CustomerName" Title="Müşteri Adı" Width="200px" />
+                        <RadzenDropDownDataGridColumn Property="CustomerLastName" Title="Müşteri Soyadı" Width="100px" />
+
+                    </Columns>
+                </RadzenDropDownDataGrid>
+            </div>
+        </div>
+    
+        <div class="row" style="margin-bottom:5px">
+            <div class="align-items-center d-flex col-md-3">
+                <RadzenLabel Text="Satış Adeti" />
+            </div>
+            <div class="col-md-3">
+                <RadzenNumeric Placeholder="300" style="width: 100%;" Name="Amount" @bind-Value="entity.Piece" />
+            </div>
+            <div class="align-items-center d-flex col-md-2">
+                <RadzenLabel Text="Satış Tarihi:" />
+            </div>
+            <div class="col-md-4">
+                <RadzenDatePicker ShowTime="true" @bind-Value="entity.Deliverydate"
+                                  ShowSeconds="true" HoursStep="1" MinutesStep="5" SecondsStep="10"
+                                  DateFormat="dd/MM/yyyy HH:mm" Class="w-100" />
+            </div>
+        </div>
+        <div class="row" style="margin-bottom:5px">
+
+            <div class="col-md-4">
+            </div>
+            <div class="col-md-4">
+            </div>
+            <div class="col-md-4">
+                <RadzenButton Text="Satış Yap" Icon="plus" ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" />
+            </div>
+        </div>
+    </RadzenFieldset>
+</RadzenTemplateForm>
+@code {
+    SalesViewModel entity;
+    IEnumerable<SalesViewModel> productList;
+    IEnumerable<SalesViewModel> taxList;
+    IEnumerable<SalesViewModel> customertList;
+    [Parameter]
+    public int Id { get; set; }
+    protected override void OnInitialized()
+    {
+        productList = Products().ToList();
+        taxList = Tax().ToList();
+        customertList = Customers().ToList();
+        if (Id != 0)
+        {
+            var sales = SalesService.GetById(Id);
+            entity = new SalesViewModel
+                {
+                    Id = sales.Id,
+                    CustomerId = sales.CustomerId.Id,
+                    CustomerName = sales.CustomerId.FirstName + " " + sales.CustomerId.LastName,
+                    TaxtId = sales.TaxId.Id,
+                    TaxType = sales.TaxId.TaxType,
+                    Percentile = sales.TaxId.Percentile,
+                    DateOfTransction = sales.DateOfTransaction,
+                    Piece = sales.ProductId.Id,
+                    ProductId = sales.ProductId.Id,
+                    ProductName = sales.ProductId.Name,
+                    Deliverydate = sales.Deliverydate
+                };
+        }
+        else
+        {
+            entity = new SalesViewModel();
+        }
+        base.OnInitialized();
+    }
+
+    private IEnumerable<SalesViewModel> Products()
+    {
+        List<SalesViewModel> model = new List<SalesViewModel>();
+
+        foreach (var item in ProductService.GetAll())
+        {
+            model.Add(new SalesViewModel
+                {
+                    ProductId = item.Id,
+                    ProductName = item.Name,
+                    BrandsId = item.BrandId.Id,
+                    BrandsName = item.BrandId.Name,
+                    CategoryId = item.CategoryId.Id,
+                    CateogryName = item.CategoryId.Name
+                });
+        }
+
+        return model;
+    }
+    private IEnumerable<SalesViewModel> Tax()
+    {
+        List<SalesViewModel> model = new List<SalesViewModel>();
+
+        foreach (var item in TaxService.GetAll())
+        {
+            model.Add(new SalesViewModel
+                {
+                    TaxtId = item.Id,
+                    TaxType = item.TaxType,
+                    Percentile = item.Percentile
+                });
+        }
+
+        return model;
+    }
+    private IEnumerable<SalesViewModel> Customers()
+    {
+        List<SalesViewModel> model = new List<SalesViewModel>();
+
+        foreach (var item in CustomerService.GetAll())
+        {
+            model.Add(new SalesViewModel
+                {
+                    CustomerId = item.Id,
+                    CustomerName = item.FirstName,
+                    CustomerLastName = item.LastName,
+                    CustomerFirstAndLastName = item.FirstName + " " + item.LastName
+                });
+        }
+
+        return model;
+    }
+    void Submit(SalesViewModel model)
+    {
+        var stockStatus = StockService.GetAll().Where(p => p.ProductId.Id == model.ProductId).Sum(p => p.Piece);
+        int afterFallingValue = stockStatus - model.Piece;
+
+        if (afterFallingValue > 0)
+        {
+            if (Id == 0)
+            {
+
+                var sales = SalesService.Insert(TEntity(model));
+                var stock = StockService.Insert(SEntity(model));
+                NotificationService.Notify(NotificationSeverity.Success,
+              sales.ProductId.Name + " üründen toplam:" + sales.Piece.ToString() + " adet ürün "
+          + sales.CustomerId.FirstName + " " + sales.CustomerId.LastName + " adlı yapılan satış düzenlenmiştir.");
+            }
+            else
+            {
+                var sales = SalesService.Update(TEntity(model));
+                var stock = StockService.Insert(SEntity(model));
+                NotificationService.Notify(NotificationSeverity.Info,
+               sales.ProductId.Name + " üründen toplam:" + sales.Piece.ToString() + " adet ürün "
+           + sales.CustomerId.FirstName + " " + sales.CustomerId.LastName + " adlı yapılan satış düzenlenmiştir.");
+            }
+        }else
+        {
+            NotificationService.Notify(NotificationSeverity.Error,
+              model.ProductName + " üründen stokta yeterli miktarda ürün bulunmadığı için satış gerçekleştirilememiştir.");
+        }
+
+
+    }
+
+    Sales TEntity(SalesViewModel entity)
+    {
+
+        var product = ProductService.GetById(entity.ProductId);
+        var tax = TaxService.GetById(entity.TaxtId);
+        var customer = CustomerService.GetById(entity.CustomerId);
+        return new Sales
+            {
+
+                Id = entity.Id,
+                Piece = entity.Piece,
+                DateOfTransaction = DateTime.Now,
+                CustomerId = customer,
+                Deliverydate = entity.Deliverydate,
+                TaxId = tax,
+                ProductId = product
+            };
+    }
+    Stock SEntity(SalesViewModel entity)
+    {
+
+        var product = ProductService.GetById(entity.ProductId);
+        int stockPiece = -1 * entity.Piece;
+
+        return new Stock
+            {
+
+                Id = entity.Id,
+                Piece = stockPiece,
+                StockDate = DateTime.Now,
+                ProductId = product
+            };
+    }
+}

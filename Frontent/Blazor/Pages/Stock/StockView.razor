@@ -1,0 +1,118 @@
+﻿@using Business.Interfaces
+@using Entities.Entities
+@using Blazor2.Models.Stock
+@using Radzen.Blazor.Rendering
+@using Blazor2.Pages.Stock.BootstrapComponents;
+@inject IProductService ProductService
+@inject IStockService StockService
+<style>
+    .rz-panel-titlebar {
+        display: flex;
+        justify-content: space-between;
+        background: #e6ecef;
+        padding: 8px;
+        border-radius: 5px;
+        color: black;
+        border-bottom: 1px solid #dadfe2;
+    }
+
+    .rz-panel-titlebar-toggler {
+        width: 1.625rem;
+        height: 1.625rem;
+        border-radius: 5px;
+        background-color: #ff6d41;
+        color: inherit;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #f8f9fa;
+    }
+
+    .rz-panel-content {
+        margin: 0;
+        background: #f0f1f2;
+        padding: 0;
+    }
+
+    .card-title {
+        margin-bottom: 0.5rem;
+        box-shadow: 0 0 15px 0 #545d64;
+        padding: 15px;
+        border-radius: 5px;
+    }
+
+</style>
+<div class="row" style="margin-bottom: 5px; background: #e6ecef; padding-top: 15px; border-radius: 5px; border: 1px solid #ccc;">
+    <div class="col-3">
+        <div class="card text-dark bg-warning mb-3" style="max-width: 100%;">
+            <div class="card-header"><RadzenIcon Icon="search" /> Ürün Ara</div>
+            <div class="card-body">
+                <h1 class="card-title"><RadzenTextBox @oninput=@(args => OnChange(args.Value.ToString(), "TextBox with change on every input")) Style="width:100%" /></h1>
+
+                <p>Arama alanı</p>
+            </div>
+        </div>
+    </div>
+    <TotalStock Total="totalPiece" />
+    <StockTotalProductPrices />
+    <div class="col-3">
+        <div class="card text-white bg-danger mb-3" style="max-width: 100%;">
+            <div class="card-header"><RadzenIcon Icon="shopping_cart" /> Stokta Bulunan Toplam Ürün Sayısı</div>
+            <div class="card-body">
+
+                <h1 class="card-title">@StockService.GetAll().Count()</h1>
+                <p>Adet ürün bulunmaktadır.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+<StockListView SearchText="@SearchText" />
+
+@code {
+    string pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
+    int pageSize = 6;
+    int count;
+    IEnumerable<Product> orders;
+    decimal totalPrice = 0;
+    public string SearchText { get; set; }
+    int totalPiece = 0;
+    public bool Status { get; set; }
+    protected override void OnInitialized()
+    {
+        count = ProductService.GetAll().Count();
+        orders = GetOrders(0, pageSize);
+        totalPiece = StockService.GetAll().Sum(p => p.Piece);
+        var groupBy = StockService.GetAll().GroupBy(p => p.ProductId);
+
+        foreach (var item in groupBy)
+        {
+            totalPrice += item.FirstOrDefault().ProductId.Price * item.Sum(p => p.Piece);
+
+        }
+
+    }
+
+
+
+
+    void PageChanged(PagerEventArgs args)
+    {
+
+        orders = GetOrders(args.Skip, args.Top);
+        InvokeAsync(StateHasChanged);
+    }
+
+    IEnumerable<Product> GetOrders(int skip, int take)
+    {
+        return ProductService.GetAll().Skip(skip).Take(take).ToList();
+    }
+    void OnChange(string value, string name)
+    {
+        Task.Delay(TimeSpan.FromSeconds(0.3));
+        SearchText = value.ToLower();
+        //orders = ProductService.GetAll().Where(p => p.Name.ToLower().Contains(value.ToLower())).OrderByDescending(p => p.Id);
+        StateHasChanged();
+    }
+
+}

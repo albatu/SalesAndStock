@@ -1,0 +1,66 @@
+﻿@using Entities.Entities
+<style>
+.product-title {
+    min-height: 72px;
+    color: #da0074;
+    background-color: rgba(255, 41, 155, .1);
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 20px;
+    letter-spacing: -0.02em;
+}
+.price-badge {
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 20px;
+    padding: 8px;
+}
+</style>
+<RadzenCard>
+<RadzenDataList WrapItems="true" AllowPaging="true" Data="@products" TItem="Product" PageSize="5" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
+                    <Template Context="product">
+                        <RadzenCard Style="width: 100%; padding: 0; overflow: hidden;">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-lg-3 p-3 product-title">
+                                            @(product.Name)
+                                    </div>
+                                    <div class="col-lg-7 p-3">
+                                        <div class="row d-flex">
+                                            <div class="col-md-6 col-lg-2">
+                                                <h5 class="mb-0">Markası</h5>
+                                                <p class="mb-sm-2 mb-lg-0">@(product.BrandId.Name)</p>
+                                            </div>
+                                            <div class="col-md-6 col-lg-2">
+                                                <h5 class="mb-0">Kategorisi</h5>
+                                                <p class="mb-sm-2 mb-lg-0">@(product.CategoryId.Name)</p>
+                                            </div>
+                                            <div class="col-md-6 col-lg-5">
+                                                <h5 class="mb-0">Açıklaması</h5>
+                                                <p class="mb-sm-2 mb-lg-0">@(product.Description)</p>
+                                            </div>
+                                            <div class="col-md-6 order-first order-lg-last col-lg-3 text-sm-left text-lg-right mb-3 mb-lg-0">
+                                                <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Class="price-badge" Text=@($"{String.Format(new System.Globalization.CultureInfo("tr-TR"), "{0:C}", product.Price)}") />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-2 p-3">
+                                        <RadzenButton Text="Yeni Ürün Ekle" Class="w-100" />
+                                    </div>
+                                </div>
+                            </div>
+                        </RadzenCard>
+                    </Template>
+                </RadzenDataList>
+
+            </RadzenCard>
+@code {
+    [Parameter]
+    public Product Product { get; set; }
+    List<Product> products = new List<Product>();
+    protected override void OnInitialized()
+    {
+        products.Add(Product);
+        base.OnInitialized();
+    }
+}

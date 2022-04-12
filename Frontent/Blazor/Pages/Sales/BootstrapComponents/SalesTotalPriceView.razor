@@ -1,0 +1,35 @@
+﻿@using Business.Interfaces
+@using Entities.Entities
+@using Blazor2.Models.Stock
+@using Radzen.Blazor.Rendering
+@inject ISalesService SalesService
+
+<div class="col-3">
+        <div class="card text-white bg-secondary mb-3" style="max-width: 100%;">
+            <div class="card-header"><RadzenIcon Icon="payments"/> Satış Cirosu</div>
+            <div class="card-body">
+                <h1 class="card-title">@String.Format("{0:C2}", TotalPiece)</h1>
+                <p>değerindedir.</p>
+            </div>
+        </div>
+    </div>
+
+@code {
+    public decimal TotalPiece { get; set; }
+    [Parameter]
+    public DateTime StartDate { get; set; }
+    [Parameter]
+    public DateTime FinishDate { get; set; }
+    protected override void OnInitialized()
+    {
+        if(StartDate==Convert.ToDateTime("1.01.0001 00:00:00") || FinishDate==Convert.ToDateTime("1.01.0001 00:00:00"))
+        {
+            TotalPiece = SalesService.GetAll().Where(p=>p.Deliverydate<=StartDate && p.Deliverydate>=FinishDate).Sum(p=>p.Piece * p.ProductId.Price);     
+        }else
+        {
+            TotalPiece = SalesService.GetAll().Sum(p=>p.Piece * p.ProductId.Price);
+        }
+
+       
+    }
+}

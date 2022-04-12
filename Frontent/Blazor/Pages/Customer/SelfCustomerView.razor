@@ -1,0 +1,51 @@
+﻿@using Business.Interfaces
+@using Entities.Entities
+@inject ICustomerService CustomerService
+@inject NotificationService NotificationService
+<RadzenTemplateForm Data="@customer" Submit="@((Customer args) => { Submit(args); })">
+    <RadzenCard>
+        <RadzenFieldset>
+            <div class="row">
+                <div class="col-lg-4">
+                    <RadzenLabel Text="Müşteri Adı:" />
+                </div>
+                <div class="col-lg-8">
+                    <RadzenTextBox @bind-Value="customer.FirstName" Placeholder="Müşteri Adı" Style="width:100%"/>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-4">
+                    <RadzenLabel Text="Müşteri Soyadı:" />
+                </div>
+                <div class="col-lg-8">
+                    <RadzenTextBox @bind-Value="customer.LastName" Placeholder="Müşteri Soyadı" Style="width:100%"/>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-4">
+
+                </div>
+                <div class="col-lg-8">
+                    <RadzenButton ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" Text="Kaydet" Style="width:75%" />
+                </div>
+
+            </div>
+        </RadzenFieldset>
+    </RadzenCard>
+</RadzenTemplateForm>
+@code {
+    [Parameter]
+    public int CustomerId { get; set; }
+    Customer customer;
+    protected override void OnInitialized()
+    {
+        customer = CustomerService.GetById(CustomerId);
+        base.OnInitialized();
+    }
+    void Submit(Customer model)
+    {
+        CustomerService.Update(model);
+        NotificationService.Notify(NotificationSeverity.Success,
+              model.FirstName + " "+model.LastName +" adlı müşteri düzenlenmiştir.");
+    }
+}

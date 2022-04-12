@@ -1,0 +1,32 @@
+﻿@using Business.Interfaces
+@using Entities.Entities
+@inject IStockService StockService
+
+<RadzenButton Icon="privacy_tip" ButtonStyle="ButtonStyle.Danger"  Class="mr-1" Style="width: 100%;">
+    <b>@ProductName</b> Ürünün'den toplam :  
+    <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@Total.ToString()" />
+     adet Ürün bulunmaktadır. Stokta ki bulunan ürünün adet çarpımı değeri
+     <RadzenBadge Text="@String.Format("{0:C2}", Prices)" BadgeStyle="BadgeStyle.Warning" /> dir.
+</RadzenButton>
+
+
+@code {
+    [Parameter]
+    public int ProductId { get; set; }
+    public int Total { get; set; }
+    [Parameter]
+    public string ProductName { get; set; }
+    public decimal Prices { get; set; }
+    protected override void OnInitialized()
+    {
+        var stockStatus = StockService.GetAll().Where(p => p.ProductId.Id == ProductId).Sum(p => p.ProductId.Price * p.Piece);
+
+        Total = StockService.GetAll().Where(p => p.ProductId.Id == ProductId).Sum(p => p.Piece);
+        if (stockStatus < 0)
+        {
+            Prices = stockStatus * -1;
+        }
+        
+        base.OnInitialized();
+    }
+}

@@ -1,0 +1,13 @@
+﻿<div class="col-3">
+        <div class="card text-white bg-primary mb-3" style="max-width: 100%;">
+            <div class="card-header"><RadzenIcon Icon="pie_chart_outline"/> Stoktaki Ürün Miktarı</div>
+            <div class="card-body">
+                <h1 class="card-title">@Total</h1> <p>Adet ürün bulunmaktadır.</p>
+            </div>
+        </div>
+    </div>
+
+@code {
+    [Parameter]
+    public int Total { get; set; }
+}

@@ -1,0 +1,72 @@
+﻿@using Blazor2.Models.Product
+<style>
+    .table > :not(:last-child) > :last-child > * {
+        border-bottom-color: currentColor;
+        padding: 18px;
+        background: #e6ecef;
+    }
+</style>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th><p>#ID</p></th>
+            <th><p>#Ürün Kodu</p></th>
+            <th><p>Ürün Adı</p></th>
+            <th><p>Ürün Detayları</p></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr style="background:#fff">
+            <td>@Product.Id</td>
+            <td>@Product.Name</td>
+            <td>@Product.ProductCode</td>
+            <td colspan="4">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th><p>Marka</p></th>
+                            <th><p>Kategori</p></th>
+                            @if (Product.WeightUnit)
+                            {
+                                <th><p>Ağırlığı</p></th>
+                            }
+                            else
+                            {
+                                <th><p>Litresi</p></th>
+                            }
+
+                            <th><p>Yüksekliği</p></th>
+                            <th><p>Ürünün Ücreti</p></th>
+                            <th><p>Ürün Açıklaması</p></th>
+                        </tr>
+
+                    </thead>
+                    <tbody>
+                        <tr style="background:#fff">
+                            <th><p>@Product.BrandName</p></th>
+                            <th><p>@Product.CategoryName</p></th>
+                            @if (!Product.WeightUnit)
+                            {
+                                <th><p>@Product.Weight KG</p></th>
+                            }else
+                            {
+                                <th><p>@Product.Weight LT</p></th>
+                            }
+                            <th><p>@Product.Length cm</p></th>
+                            <th><p>@Product.Price ₺</p></th>
+                            <th><p>@Product.Description</p></th>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+
+
+
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public ProductViewModel Product { get; set; }
+}

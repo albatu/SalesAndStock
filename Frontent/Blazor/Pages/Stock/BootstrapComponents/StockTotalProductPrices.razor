@@ -1,0 +1,29 @@
+﻿@using Business.Interfaces
+@using Entities.Entities
+@using Blazor2.Models.Stock
+@using Radzen.Blazor.Rendering
+@inject IStockService StockService
+
+<div class="col-3">
+        <div class="card text-white bg-secondary mb-3" style="max-width: 100%;">
+            <div class="card-header"><RadzenIcon Icon="payments"/> Stoktaki Ürünlerin Toplam Değeri</div>
+            <div class="card-body">
+                <h1 class="card-title">@String.Format("{0:C2}", TotalPiece)</h1>
+                <p>değerindedir.</p>
+            </div>
+        </div>
+    </div>
+
+@code {
+    public decimal TotalPiece { get; set; }
+    protected override void OnInitialized()
+    {
+        var groupBy = StockService.GetAll().GroupBy(p => p.ProductId);
+        foreach (var item in groupBy)
+        {
+            TotalPiece += item.FirstOrDefault().ProductId.Price * item.Sum(p => p.Piece);
+
+        }
+
+    }
+}

@@ -1,0 +1,169 @@
+﻿@using Business.Interfaces
+@using Entities.Entities
+@inject ICustomerService CustomerService
+@inject IContactService ContactService
+@inject DialogService DialogService
+<div class="row">
+    <div class="col-lg-2">
+        <div class="row">
+            <div class="col-lg-12">
+                <RadzenLabel Text="Müşteri Ekle" />
+            </div>
+            <div class="col-lg-12">
+                <RadzenButton Icon="add_circle_outline" Style="width:100%;margin-bottom: 10px" Click="InsertCustomer" />
+            </div>
+        </div>
+
+
+    </div>
+    <div class="col-lg-10">
+        <div class="row">
+            <div class="col-lg-12">
+                <RadzenLabel Text="Müşteri Ara" />
+            </div>
+            <div class="col-lg-12">
+                <RadzenTextBox @oninput=@(args => OnChange(args.Value.ToString(), "TextBox with change on every input")) Class="w-100" />
+            </div>
+        </div>
+
+
+    </div>
+
+</div>
+<RadzenCard>
+
+
+    <RadzenDataList WrapItems="true" AllowPaging="true" Data="@customers" TItem="Customer" PageSize="5" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
+        <Template Context="customer">
+            <RadzenCard Style="width: 100%; padding: 0; overflow: hidden;">
+                <div class="row">
+                    <div class="col-lg-1 p-3">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <RadzenImage Path="https://cdn4.iconfinder.com/data/icons/cosmetology-set/52/cosmetology-03-256.png" Style="width: 50px;" />
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="col-lg-2 p-3 product-title">
+                        @(customer.FirstName) @(customer.LastName)
+                        <RadzenButton Text="Detaylarını Düzenleyin" Class="w-100" Icon="account_circle" Click="()=>CustomerDetails(customer.Id)" />
+
+                    </div>
+                    @{
+                        var contact = ContactService.GetAll().Where(p => p.CustomerId.Id == customer.Id).FirstOrDefault();
+                    }
+                    @if (contact != null)
+                    {
+                        <div class="col-lg-7 p-3">
+                            <div class="row d-flex">
+                                <div class="col-md-6 col-lg-2">
+                                    <h5 class="mb-0">Şehir</h5>
+                                    <p class="mb-sm-2 mb-lg-0">@(contact.CityId.Name)</p>
+                                </div>
+                                <div class="col-md-6 col-lg-2">
+                                    <h5 class="mb-0">İlçe</h5>
+                                    <p class="mb-sm-2 mb-lg-0">@(contact.DistrictId.Name)</p>
+                                </div>
+                                <div class="col-md-6 col-lg-2">
+                                    <h5 class="mb-0">Telefon</h5>
+                                    <p class="mb-sm-2 mb-lg-0">@(contact.Phone)</p>
+                                </div>
+                                <div class="col-lg-6">
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Class="price-badge" Text=@contact.AddressDetails />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-lg-7 p-3">
+                            <div class="row d-flex">
+                                <div class="col-md-6 col-lg-6">
+                                    <h5>Müşteri Detay Bilgisi Girilmemiştir.</h5>
+                                </div>
+                                <div class="col-md-6 col-lg-6">
+                                    <RadzenButton Text="Müşteri Detaylarını Girin" Class="w-100" Icon="account_circle" Click="()=>CustomerDetails(customer.Id)" />
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="col-lg-2 p-3">
+                        <RadzenButton Text="Müşteriyi Düzenle" Class="w-100" Icon="account_circle" Click="()=>Customer(customer.Id)" />
+                    </div>
+                </div>
+            </RadzenCard>
+        </Template>
+    </RadzenDataList>
+
+</RadzenCard>
+
+<style>
+
+</style>
+
+@code {
+    IEnumerable<Customer> customers;
+    public string SearchText { get; set; }
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        customers = CustomerService.GetAll();
+
+    }
+    public void Dispose()
+    {
+        // The DialogService is a singleton so it is advisable to unsubscribe.
+        DialogService.OnOpen -= Open;
+        DialogService.OnClose -= Close;
+        customers = CustomerService.GetAll();
+        StateHasChanged();
+    }
+
+    void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
+    {
+        customers = CustomerService.GetAll();
+        StateHasChanged();
+    }
+
+    void Close(dynamic result)
+    {
+        customers = CustomerService.GetAll();
+        StateHasChanged();
+    }
+    void OnChange(string value, string name)
+    {
+        customers = CustomerService.GetAll().Where(p => p.FirstName.Contains(value) || p.LastName.Contains(value));
+        StateHasChanged();
+    }
+    void InsertCustomer()
+    {
+        DialogService.Open<Blazor2.Pages.Customer.AddCustomerView>($"Müşteri İşlemleri",
+               new Dictionary<string, object>(),
+               new DialogOptions() { Width = "80%", Height = "60%", Resizable = true, Draggable = false, CloseDialogOnEsc = true });
+        customers = CustomerService.GetAll();
+        StateHasChanged();
+    }
+
+
+    void Customer(int id)
+    {
+        var customer = CustomerService.GetById(id);
+        DialogService.Open<SelfCustomerView>(customer.FirstName +" "+customer.LastName,
+                new Dictionary<string, object>() { { "CustomerId", id } },
+                new DialogOptions() { Width = "30%", Height = "40%", Resizable = true, Draggable = false, CloseDialogOnEsc = true });
+        customers = CustomerService.GetAll();
+        StateHasChanged();
+    }
+    //CustomerDetails
+    void CustomerDetails(int id)
+    {
+        var customer = CustomerService.GetById(id);
+        DialogService.Open<ContactDetails>(customer.FirstName +" "+customer.LastName +" adlı kişinin detaylarını görüntülüyorsunuz.",
+                new Dictionary<string, object>() { { "CustomerId", id } },
+                new DialogOptions() { Width = "50%", Height = "60%", Resizable = true, Draggable = false, CloseDialogOnEsc = true });
+        customers = CustomerService.GetAll();
+        StateHasChanged();
+    }
+}

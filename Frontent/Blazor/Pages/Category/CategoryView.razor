@@ -1,0 +1,137 @@
+﻿@using Business.Interfaces
+@using Entities.Entities
+@using Blazor2.Models.Product
+@inject ICategoryService CategoryService
+@inject IBrandService BrandService
+
+<RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px" Text="Kategori Ekle" Click="@InsertRow" Disabled=@(entityToInsert != null) />
+<RadzenDataGrid @ref="stockGrid" AllowFiltering="true" AllowPaging="true" PageSize="5" AllowSorting="true" EditMode="DataGridEditMode.Single"
+                Data="@categoriesList" TItem="Category" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
+    <Columns>
+        <RadzenDataGridColumn TItem="Category" Property="Id" Title="#ÜRÜN ID" Width="130px" />
+        <RadzenDataGridColumn TItem="Category" Property="Name" Title="ÜRÜN ADI" Width="200px">
+            <Template Context="entity">
+                @entity.Name
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenTextBox @bind-Value="entity.Name" Style="width:100%" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Category" Property="Description" Title="Kategori Açıklaması" Width="200px">
+            <Template Context="entity">
+                @entity.Description
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenTextArea @bind-Value="entity.Description" Style="width:100%" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Category" Context="sampleBlazorModelsSampleOrder" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="120px">
+            <Template Context="entity">
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Class="m-1" Click="@(args => EditRow(entity))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Primary" Class="m-1" Click="@((args) => SaveRow(entity))">
+                </RadzenButton>
+                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Class="m-1" Click="@((args) => CancelEdit(entity))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Category" Context="entity" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="60px">
+            <Template Context="entity">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Class="m-1" Click="@(args => DeleteRow(entity))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Class="m-1" Click="@(args => DeleteRow(entity))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    RadzenDataGrid<Category> stockGrid;
+    IList<Category> categoriesList;
+
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        categoriesList = CategoryService.GetAll();
+
+    }
+
+    async Task EditRow(Category entity)
+    {
+        await stockGrid.EditRow(entity);
+    }
+
+    void OnUpdateRow(Category entity)
+    {
+        CategoryService.Update(entity);
+        categoriesList = CategoryService.GetAll();
+        StateHasChanged();
+    }
+
+    async Task SaveRow(Category entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        await stockGrid.UpdateRow(entity);
+    }
+
+    void CancelEdit(Category entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        stockGrid.CancelEditRow(entity);
+
+
+    }
+
+    void DeleteRow(Category entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        if (categoriesList.Contains(entity))
+        {
+
+            CategoryService.Delete(entity);
+            categoriesList = CategoryService.GetAll();
+            StateHasChanged();
+        }
+        else
+        {
+            stockGrid.CancelEditRow(entity);
+        }
+    }
+
+    Category entityToInsert;
+
+    void InsertRow()
+    {
+        entityToInsert = new Category();
+        stockGrid.InsertRow(entityToInsert);
+    }
+
+    void OnCreateRow(Category entity)
+    {
+        CategoryService.Insert(entity);
+        categoriesList = CategoryService.GetAll();
+        StateHasChanged();
+
+    }
+
+
+}

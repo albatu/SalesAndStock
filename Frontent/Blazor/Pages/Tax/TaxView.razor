@@ -1,0 +1,137 @@
+﻿@using Business.Interfaces
+@using Entities.Entities
+@using Blazor2.Models.Product
+@inject ITaxService TaxService
+@inject IBrandService BrandService
+
+<RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px" Text="KDV Vergisi Ekle" Click="@InsertRow" Disabled=@(entityToInsert != null) />
+<RadzenDataGrid @ref="taxGrid" AllowFiltering="true" AllowPaging="true" PageSize="5" AllowSorting="true" EditMode="DataGridEditMode.Single"
+                Data="@taxList" TItem="Tax" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
+    <Columns>
+        <RadzenDataGridColumn TItem="Tax" Property="Id" Title="#VERGİ ID" Width="130px" />
+        <RadzenDataGridColumn TItem="Tax" Property="Percentile" Title="VERGİ ORANI" Width="200px">
+            <Template Context="entity">
+                @entity.Percentile
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenNumeric @bind-Value="entity.Percentile" Style="width:100%" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Tax" Property="TaxType" Title="Vergi Tipi Adı" Width="200px">
+            <Template Context="entity">
+                @entity.TaxType
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenTextBox @bind-Value="entity.TaxType" Style="width:100%" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Tax" Context="sampleBlazorModelsSampleOrder" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="120px">
+            <Template Context="entity">
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Class="m-1" Click="@(args => EditRow(entity))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Primary" Class="m-1" Click="@((args) => SaveRow(entity))">
+                </RadzenButton>
+                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Class="m-1" Click="@((args) => CancelEdit(entity))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Tax" Context="entity" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="60px">
+            <Template Context="entity">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Class="m-1" Click="@(args => DeleteRow(entity))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Class="m-1" Click="@(args => DeleteRow(entity))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    RadzenDataGrid<Tax> taxGrid;
+    IList<Tax> taxList;
+
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        taxList = TaxService.GetAll();
+
+    }
+
+    async Task EditRow(Tax entity)
+    {
+        await taxGrid.EditRow(entity);
+    }
+
+    void OnUpdateRow(Tax entity)
+    {
+        TaxService.Update(entity);
+        taxList = TaxService.GetAll();
+        StateHasChanged();
+    }
+
+    async Task SaveRow(Tax entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        await taxGrid.UpdateRow(entity);
+    }
+
+    void CancelEdit(Tax entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        taxGrid.CancelEditRow(entity);
+
+
+    }
+
+    void DeleteRow(Tax entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        if (taxList.Contains(entity))
+        {
+
+            TaxService.Delete(entity);
+            taxList = TaxService.GetAll();
+            StateHasChanged();
+        }
+        else
+        {
+            taxGrid.CancelEditRow(entity);
+        }
+    }
+
+    Tax entityToInsert;
+
+    void InsertRow()
+    {
+        entityToInsert = new Tax();
+        taxGrid.InsertRow(entityToInsert);
+    }
+
+    void OnCreateRow(Tax entity)
+    {
+        TaxService.Insert(entity);
+        taxList = TaxService.GetAll();
+        StateHasChanged();
+
+    }
+
+
+}

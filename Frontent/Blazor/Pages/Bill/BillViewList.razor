@@ -1,0 +1,94 @@
+﻿@using Blazor2.Models.Sales
+@using Business.Interfaces
+@using Entities.Entities
+@inject ISalesService SalesService
+@inject IBillService BillService
+@inject NotificationService NotificationService
+
+<RadzenTemplateForm Data="@entity" Submit="@((Bill args) => { Submit(args); })">
+    <RadzenFieldset Text="Satış işlemleri">
+        <div class="row" style="margin-bottom:5px">
+            <div class="align-items-center d-flex col-md-3">
+                <RadzenLabel Text="Ürün Seç" />
+            </div>
+            <div class="col-md-9">
+                <RadzenDropDownDataGrid TValue="int" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                        AllowFiltering="true" AllowClear="true" @bind-Value="SalesId"
+                                        Data=@(salesList) Style="width: 100%" AllowColumnResize="true"
+                                        TextProperty="CustomerId.FirstName" ValueProperty="CustomerId.Id" AllowFilteringByAllStringColumns="true">
+                    <Columns>
+                        <RadzenDropDownDataGridColumn Property="ProductId" Title="Id" Width="100px" />
+                        <RadzenDropDownDataGridColumn Property="ProductName" Title="Ürün Adı" Width="200px" />
+                        <RadzenDropDownDataGridColumn Property="BrandsName" Title="Marka" Width="100px" />
+                        <RadzenDropDownDataGridColumn Property="CateogryName" Title="Kategorisi" Width="100px" />
+                    </Columns>
+                </RadzenDropDownDataGrid>
+            </div>
+        </div>
+
+
+        <div class="row" style="margin-bottom:5px">
+
+            <div class="col-md-4">
+            </div>
+            <div class="col-md-4">
+            </div>
+            <div class="col-md-4">
+                <RadzenButton Text="Satış Yap" Icon="plus" ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" />
+            </div>
+        </div>
+    </RadzenFieldset>
+</RadzenTemplateForm>
+@code {
+    Bill entity;
+    IEnumerable<Sales> salesList;
+    IEnumerable<Bill> customertList;
+    [Parameter]
+    public int Id { get; set; }
+    [Parameter]
+    public int SalesId { get; set; }
+
+    protected override void OnInitialized()
+    {
+
+
+        if (Id != 0)
+        {
+            var bill = BillService.GetById(Id);
+            entity = new Bill
+                {
+                    Id = bill.Id,
+                    BillNo = bill.BillNo,
+                    SalesId = bill.SalesId
+                };
+        }
+        else
+        {
+            entity = new Bill();
+        }
+        base.OnInitialized();
+    }
+
+    void Submit(Bill model)
+    {
+
+        if (Id == 0)
+        {
+            var sales = SalesService.GetById(SalesId);
+            model.SalesId = sales;
+            var bill = BillService.Insert(model);
+            NotificationService.Notify(NotificationSeverity.Success,
+            model.SalesId.CustomerId.FirstName + " " + model.SalesId.CustomerId.LastName + " müşteriye " +
+            model.BillNo + " numaralı fatura oluşturulmuştur.");
+        }
+        else
+        {
+            var sales = SalesService.GetById(SalesId);
+            model.SalesId = sales;
+            NotificationService.Notify(NotificationSeverity.Success,
+             model.SalesId.CustomerId.FirstName + " " + model.SalesId.CustomerId.LastName + " müşteriye " +
+             model.BillNo + " numaralı fatura düzenlenmiştir.");
+        }
+
+    }
+}

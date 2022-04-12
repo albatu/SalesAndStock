@@ -1,0 +1,149 @@
+﻿@using Business.Interfaces
+@using Entities.Entities
+@using Blazor2.Models.Product
+@inject IBrandService BrandService
+
+
+<RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px" Text="Marka Ekle" Click="@InsertRow" 
+Disabled=@(entityToInsert != null) />
+<RadzenDataGrid @ref="stockGrid" AllowFiltering="true" AllowPaging="true" PageSize="5" 
+AllowSorting="true" EditMode="DataGridEditMode.Single" FilterMode="FilterMode.Simple"
+                Data="@brandsList" TItem="Brands" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
+    <Columns>
+        <RadzenDataGridColumn TItem="Brands" Property="Id" Title="#MARKA ID" Width="130px" />
+        <RadzenDataGridColumn TItem="Brands" Property="Name" Title="MARKA ADI" Width="200px" Filterable="true">
+            <Template Context="entity">
+                @entity.Name
+                
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenTextBox @bind-Value="entity.Name" Style="width:100%" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Brands" Property="Phone" Title="MARKA YETKİLİSİ TELEFONU" Width="200px" Filterable="true">
+            <Template Context="entity">
+                @entity.Phone
+                
+            </Template>
+            <EditTemplate Context="entity">
+               <RadzenMask Mask="(***) ***-****" CharacterPattern="[0-9]" Placeholder="(000) 000-0000" Name="Phone" @bind-Value=@entity.Phone Style="width: 100%;" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Brands" Property="CompanyRepresentative" Title="MARKA YETKİSİNİN ADI SOYADI" Width="200px" Filterable="true">
+            <Template Context="entity">
+                @entity.CompanyRepresentative
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenTextBox @bind-Value="entity.CompanyRepresentative" Style="width:100%" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Brands" Context="sampleBlazorModelsSampleOrder" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="120px">
+            <Template Context="entity">
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Class="m-1" Click="@(args => EditRow(entity))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Primary" Class="m-1" Click="@((args) => SaveRow(entity))">
+                </RadzenButton>
+                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Class="m-1" Click="@((args) => CancelEdit(entity))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Brands" Context="entity" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="60px">
+            <Template Context="entity">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Class="m-1" Click="@(args => DeleteRow(entity))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Class="m-1" Click="@(args => DeleteRow(entity))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    RadzenDataGrid<Brands> stockGrid;
+    IList<Brands> brandsList;
+
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        brandsList = BrandService.GetAll();
+
+    }
+
+    async Task EditRow(Brands entity)
+    {
+        await stockGrid.EditRow(entity);
+    }
+
+    void OnUpdateRow(Brands entity)
+    {
+        BrandService.Update(entity);
+        brandsList = BrandService.GetAll();
+        StateHasChanged();
+    }
+
+    async Task SaveRow(Brands entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        await stockGrid.UpdateRow(entity);
+    }
+
+    void CancelEdit(Brands entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        stockGrid.CancelEditRow(entity);
+
+
+    }
+
+    void DeleteRow(Brands entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        if (brandsList.Contains(entity))
+        {
+
+            BrandService.Delete(entity);
+            brandsList = BrandService.GetAll();
+            StateHasChanged();
+        }
+        else
+        {
+            stockGrid.CancelEditRow(entity);
+        }
+    }
+
+    Brands entityToInsert;
+
+    void InsertRow()
+    {
+        entityToInsert = new Brands();
+        stockGrid.InsertRow(entityToInsert);
+    }
+
+    void OnCreateRow(Brands entity)
+    {
+        BrandService.Insert(entity);
+        brandsList = BrandService.GetAll();
+        StateHasChanged();
+
+    }
+
+
+}

@@ -1,0 +1,76 @@
+﻿@inject DialogService DialogService
+@implements IDisposable
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Blazor2</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" @onclick="()=>OpenOrder()">
+                <span class="oi oi-plus" aria-hidden="true"></span> Ürünler
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="fetchdata">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
+            </NavLink>
+        </div>
+    </nav>
+</div>
+
+           
+@code {
+    private bool collapseNavMenu = false;
+     protected override void OnInitialized()
+    {
+        DialogService.OnOpen += Open;
+        DialogService.OnClose += Close;
+        base.OnInitialized();
+    }
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+   
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+
+    }
+    public void Dispose()
+    {
+        // The DialogService is a singleton so it is advisable to unsubscribe.
+        DialogService.OnOpen -= Open;
+        DialogService.OnClose -= Close;
+    }
+
+    void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
+    {
+
+    }
+
+    void Close(dynamic result)
+    {
+
+    }
+
+    void OpenOrder()
+    {
+
+        DialogService.Open<Blazor2.Pages.Product.ProductView>($"Ürün Ekle",
+               new Dictionary<string, object>(),
+               new DialogOptions() { Width = "100%", Height = "80%", Resizable = true, Draggable = false, Left = "-14.5%", CloseDialogOnEsc = true });
+     StateHasChanged();
+    }
+
+
+}

@@ -1,0 +1,356 @@
+﻿@using ViewOperation.Interfaces
+@using Business.Interfaces
+@using Blazor2.Models.Sales
+@using Blazor2.Pages.Sales.BootstrapComponents
+@using Radzen.Blazor.Rendering
+@inject ISalesViewService SalesViewService
+@inject ISalesService SalesService
+@inject DialogService DialogService
+
+<style>
+    .rz-panel-content {
+        margin: 0;
+        padding-left: 15px;
+    }
+
+    .rz-group-header-item {
+        border: solid 1px #ffffff;
+        padding: 10px;
+        margin: 5px;
+        width: fit-content;
+        float: left;
+        background: #479cc8;
+        color: white;
+        border-radius: 3px;
+    }
+
+    .rz-dialog-titlebar-close .rzi-times {
+        border: 1px solid #e6ecef;
+        font-size: 1.25rem;
+        color: #ffffff;
+        vertical-align: middle;
+        padding: 0;
+        background: #d10202;
+        border-radius: 2px;
+    }
+
+    .rz-tabview-nav li a {
+        display: flex;
+        align-items: center;
+        color: #60676a;
+        padding: 0.375rem 1.875rem;
+        font-size: inherit;
+        font-weight: 600;
+        text-decoration: none;
+    }
+</style>
+<RadzenCard Style="width:100%;margin-bottom:10px;">
+    <RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px;width:20%" Text="Satış Yap" Click="@InsertRow" Disabled=@(entityToInsert != null) />
+    <div class="row">
+
+        <div class="col-lg-3">
+            <div class="row">
+                <div class="col-lg-12">
+                    <RadzenLabel Text="Ürünlere Göre Listeleyin" />
+                </div>
+                <div class="col-lg-12">
+                    <RadzenDropDownDataGrid TValue="int" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                            AllowFiltering="true" AllowClear="true" @bind-Value="ProductId"
+                                            Data=@(SalesViewService.GetProductList()) Style="width: 100%" AllowColumnResize="true"
+                                            Change="ProductByList"
+                                            TextProperty="ProductName" ValueProperty="ProductId" AllowFilteringByAllStringColumns="true">
+                        <Columns>
+
+                            <RadzenDropDownDataGridColumn Property="ProductId" Title="Ürün Id" Width="100px" />
+                            <RadzenDropDownDataGridColumn Property="ProductName" Title="Ürün Adı" Width="200px" />
+                            <RadzenDropDownDataGridColumn Property="Price" Title="Ürün Fiyatı" Width="200px" />
+
+                        </Columns>
+                    </RadzenDropDownDataGrid>
+                </div>
+            </div>
+
+        </div>
+        <div class="col-lg-3">
+            <div class="row">
+                <div class="col-lg-12">
+                    <RadzenLabel Text="Müşteriye Göre Listeleyin" />
+                </div>
+                <div class="col-lg-12">
+                    <RadzenDropDownDataGrid TValue="int" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                            AllowFiltering="true" AllowClear="true" @bind-Value="CustomerId"
+                                            Data=@(SalesViewService.CustomerList()) Style="width: 100%" AllowColumnResize="true"
+                                            Change="CustomerByList"
+                                            TextProperty="CustomerFirstAndLastName" ValueProperty="CustomerId" AllowFilteringByAllStringColumns="true">
+                        <Columns>
+
+                            <RadzenDropDownDataGridColumn Property="CustomerId" Title="Müşteri Id" Width="100px" />
+                            <RadzenDropDownDataGridColumn Property="CustomerFirstAndLastName" Title="Müşteri Adı ve Soyadı" Width="200px" />
+                          
+
+                        </Columns>
+                    </RadzenDropDownDataGrid>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="row">
+                <div class="col-lg-5">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <RadzenLabel Text="Başlangıç Tarihi" />
+                        </div>
+                        <div class="col-lg-12">
+                            <RadzenDatePicker ShowTime="true" @bind-Value="StartDate"
+                                              ShowSeconds="true" HoursStep="1" MinutesStep="5" SecondsStep="10"
+                                              DateFormat="dd/MM/yyyy HH:mm" Class="w-100" />
+                            <RadzenRequiredValidator Component="StartDate" Text="Lütfen Başlangıç Tarih Giriniz" Popup="true" Style="position: absolute" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <RadzenLabel Text="Bitiş Tarihi Tarihi" />
+                        </div>
+                        <div class="col-lg-12">
+                            <RadzenDatePicker ShowTime="true" @bind-Value="FinishDate"
+                                              ShowSeconds="true" HoursStep="1" MinutesStep="5" SecondsStep="10"
+                                              DateFormat="dd/MM/yyyy HH:mm" Class="w-100" />
+                            <RadzenRequiredValidator Component="FinishDate" Text="Lütfen Bitiş Tarih Giriniz" Popup="true" Style="position: absolute" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-2">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <RadzenLabel Text="Filtrele" />
+                        </div>
+                        <div class="col-lg-12">
+                            <RadzenButton Icon="list" style="margin-bottom: 10px;width:100%" Click="@DateOfList" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</RadzenCard>
+<div class="row">
+   <SalesTotalPriceView />
+</div>
+
+
+
+<RadzenDataGrid AllowGrouping="true" AllowFiltering="true" @ref="stockGrid" EditMode="DataGridEditMode.Single"
+                AllowColumnResize="true" FilterMode="FilterMode.Simple" PageSize="25" AllowPaging="true" AllowSorting="true"
+                Data="@salesList" TItem="SalesViewModel" ColumnWidth="160px" FilterCaseSensitivity="FilterCaseSensitivity.Default"
+                FilterText="true"
+                LogicalFilterOperator="LogicalFilterOperator.Or" Render="@OnRender">
+    <GroupHeaderTemplate>
+
+        <h1 style="font-size: 2.0rem; background: #e6ecef; border-radius: 5px; padding-left: 15px; border: 1px solid #e6ecef; color: #ff6d41">@context.Data.Key</h1>
+    </GroupHeaderTemplate>
+    <Template Context="entity">
+       
+        <SalesDetailView Sales="SalesViewService.TEntity(entity)" />
+    </Template>
+
+    <Columns>
+
+        <RadzenDataGridColumn TItem="SalesViewModel" Property="Id" Filterable="true" Title="#SK" Frozen="true" Width="100px" TextAlign="TextAlign.Center" />
+
+        <RadzenDataGridColumn TItem="SalesViewModel" Property="ProductName" Title="Ürün Adı" Width="200px" />
+         <RadzenDataGridColumn TItem="SalesViewModel" Property="Price" Title="Ürün Fiyatı" Width="200px">
+             <Template Context="context">
+                 @String.Format("{0:C2}", context.Price)
+             </Template>
+         </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="SalesViewModel" Property="Deliverydate" Title="Satış Tarihi">
+            <Template Context="entity">
+                @entity.Deliverydate.ToString("dd/MM/yyyy HH:mm")
+            </Template>
+
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="SalesViewModel" Property="Piece" Title="Adet" Width="380px">
+            <Template Context="order">
+                @order.Piece
+            </Template>
+            <FooterTemplate>
+                <p>Satılan ürünlerin toplam miktarı : <b>@salesList.Sum(o => o.Price)</b></p>
+            </FooterTemplate>
+            <GroupFooterTemplate>
+                <RadzenPanel Style="background:#ff6d41;color:white;padding:0;margin:0">
+                    <b>@Convert.ToString(context.Data.Items.Cast<SalesViewModel>().FirstOrDefault().ProductName)</b> adlı ürününden toplam:
+                    <b>
+                        (
+                        @Convert.ToString(@String.Format(new System.Globalization.CultureInfo("tr-TR"), "{0:C}", context.Data.Items.Cast<SalesViewModel>().Sum(o => o.Price)))
+                        )
+                    </b> değerinde ürün satılmıştır.
+                </RadzenPanel>
+
+            </GroupFooterTemplate>
+
+
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="SalesViewModel" Context="order" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="60px">
+            <Template Context="order">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Medium" Class="m-1" Click="@(args => DeleteRow(order))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="order">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Medium" Class="m-1" Click="@(args => DeleteRow(order))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    RadzenDataGrid<SalesViewModel> stockGrid;
+    IEnumerable<SalesViewModel> salesList;
+    public int ProductId { get; set; }
+    public int CustomerId { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime FinishDate { get; set; }
+    bool? groupsExpanded;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        salesList = SalesViewService.GetSalesList();
+        
+
+
+        DialogService.OnOpen += Open;
+        DialogService.OnClose += Close;
+    }
+    public void ProductByList()
+    {
+        salesList = SalesViewService.GetProductByIdList(ProductId);
+        StateHasChanged();
+    }
+     public void CustomerByList()
+    {
+        salesList = SalesViewService.GetCustomerByIdList(CustomerId);
+        StateHasChanged();
+    }
+    public void DateOfList()
+    {
+        salesList = SalesViewService.GetByDateList(StartDate,FinishDate);
+        StateHasChanged();
+    }
+    public void Dispose()
+    {
+        // The DialogService is a singleton so it is advisable to unsubscribe.
+        DialogService.OnOpen -= Open;
+        DialogService.OnClose -= Close;
+        salesList = SalesViewService.GetSalesList();
+
+        StateHasChanged();
+    }
+
+    void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
+    {
+        salesList = SalesViewService.GetSalesList();
+
+        StateHasChanged();
+    }
+
+    void Close(dynamic result)
+    {
+        salesList = SalesViewService.GetSalesList();
+
+        StateHasChanged();
+    }
+    void EditRow(SalesViewModel entity)
+    {
+        DialogService.Open<SalesOperation>($"Satış Düzenle",
+                new Dictionary<string, object>() { { "Id", entity.Id } },
+                new DialogOptions() { Width = "50%", Height = "60%", Resizable = true, Draggable = false, CloseDialogOnEsc = true });
+        salesList = SalesViewService.GetSalesList();
+
+        StateHasChanged();
+    }
+
+    
+
+    async Task DeleteRow(SalesViewModel entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        if (salesList.Contains(entity))
+        {
+
+            SalesService.Delete(SalesViewService.TEntity(entity));
+            await stockGrid.Reload();
+            salesList = SalesViewService.GetSalesList();
+            StateHasChanged();
+        }
+        else
+        {
+            stockGrid.CancelEditRow(entity);
+            salesList = SalesViewService.GetSalesList();
+            StateHasChanged();
+        }
+    }
+
+    SalesViewModel entityToInsert;
+
+    void InsertRow()
+    {
+        DialogService.Open<SalesOperation>($"Satış Ekle",
+               new Dictionary<string, object>() { { "Id", 0 } },
+               new DialogOptions() { Width = "50%", Height = "60%", Resizable = true, Draggable = false, CloseDialogOnEsc = true });
+        salesList = SalesViewService.GetSalesList();
+
+        StateHasChanged();
+    }
+
+
+   
+   
+    void OnRender(DataGridRenderEventArgs<SalesViewModel> args)
+    {
+        if (args.FirstRender)
+        {
+            //args.Grid.Groups.Add(new GroupDescriptor() { Property = "ProductName", SortOrder = SortOrder.Descending, Title = "Ürün Gruplamasına göre satış hareketleri" });
+
+            StateHasChanged();
+        }
+    }
+
+    void OnGroupRowRender(GroupRowRenderEventArgs args)
+    {
+        if (args.FirstRender && args.Group.Data.Key == "Vice President, Sales")
+        {
+            args.Expanded = false;
+
+        }
+    }
+
+    void OnGroupRowExpand(Group group)
+    {
+
+
+    }
+
+    void OnGroupRowCollapse(Group group)
+    {
+        //console.Log($"Group row with key: {group.Data.Key} collapsed");
+    }
+    void CellRender(DataGridCellRenderEventArgs<SalesViewModel> args)
+    {
+        if (args.Column.Property == "Piece")
+        {
+            args.Attributes.Add("style", $"background-color: {(args.Data.Piece > 0 ? "#ff6d41" : "white")};");
+        }
+
+    }
+}

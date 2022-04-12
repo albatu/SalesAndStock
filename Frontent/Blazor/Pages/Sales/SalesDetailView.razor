@@ -1,0 +1,187 @@
+﻿@using Entities.Entities
+@using Business.Interfaces
+@inject IStockService StockService
+@inject IBillService BillService
+@inject DialogService DialogService
+
+@implements IDisposable
+<div class="container">
+    <div class="row py-5">
+        <div class="col">
+            <RadzenCard Style="width:100%">
+                @if (bill == null)
+                {
+                    <RadzenButton Text="Faturalandır" ButtonType="ButtonType.Button" Icon="add_card" Style="width:20%" Click="Fatura" />
+                    <hr />
+                }
+                else
+                {
+                    <RadzenButton Text="Fatura Detayları" ButtonType="ButtonType.Button" Icon="credit_card" Style="width:20%" Click="Fatura" />
+                    <hr />
+                }
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <RadzenLabel Text="Ürün Adı:" Style="color:red" />
+                            </div>
+
+                            <div class="col-lg-8">
+                                @Sales.ProductId.Name
+                                @String.Format(new System.Globalization.CultureInfo("tr-TR"), "{0:C}", Sales.ProductId.Price)
+                            </div>
+                            <hr />
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <RadzenLabel Text="Ürünü Alan Müşteri:" Style="color:red" />
+                            </div>
+
+                            <div class="col-lg-8">
+                                @{
+                                    string nameSurname = Sales.CustomerId.FirstName + " " + Sales.CustomerId.LastName;
+                                }
+                                <a href="#">@nameSurname</a>
+                            </div>
+                            <hr />
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <RadzenLabel Text="Satılan Ürün Miktarı" Style="color:red" />
+                            </div>
+                            <div class="col-lg-8">
+                                @Sales.Piece
+                            </div>
+                            <hr />
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <RadzenLabel Text="Sistemden Satışın Gerçekleştirildiği Tarih" Style="color:red" />
+                            </div>
+                            <div class="col-lg-8">
+                            </div>
+                            <hr />
+                        </div>
+
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <RadzenLabel Text="Satış Tarihi :" Style="color:red" />
+                            </div>
+                            <div class="col-lg-8">
+                                @Sales.Deliverydate
+                            </div>
+                            <hr />
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <RadzenLabel Text="Ürünün Stokta ki Miktarı :" Style="color:red" />
+                            </div>
+                            <div class="col-lg-8">
+                                @Stock
+                            </div>
+                            <hr />
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <RadzenLabel Text="Ürünün Vergilendirme Türü :" Style="color:red" />
+                            </div>
+                            <div class="col-lg-8">
+                                @Sales.TaxId.TaxType : KDV Oranı : %@Sales.TaxId.Percentile
+                            </div>
+                            <hr />
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-4">
+                            </div>
+                            <div class="col-lg-8">
+                                @Sales.DateOfTransaction
+                            </div>
+                            <hr />
+                        </div>
+                    </div>
+                </div>
+
+            </RadzenCard>
+        </div>
+    </div>
+</div>
+
+<style>
+    .product-title {
+        min-height: 72px;
+        color: #da0074;
+        background-color: rgba(255, 41, 155, .1);
+        font-size: 20px;
+        font-weight: bold;
+        line-height: 20px;
+        letter-spacing: -0.02em;
+    }
+
+    .price-badge {
+        font-size: 16px;
+        font-weight: bold;
+        line-height: 20px;
+        padding: 8px;
+    }
+</style>
+
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    [Parameter]
+    public Sales Sales { get; set; }
+    int Stock = 0;
+    Bill bill;
+
+    protected override void OnInitialized()
+    {
+
+
+        base.OnInitialized();
+        Stock = StockService.GetAll().Where(p => p.ProductId.Id == Sales.ProductId.Id).Select(p => p.Piece).Sum();
+        bill = BillService.GetAll().Where(p => p.SalesId.Id == Sales.Id).FirstOrDefault();
+
+
+    }
+    public void Dispose()
+    {
+        // The DialogService is a singleton so it is advisable to unsubscribe.
+        DialogService.OnOpen -= Open;
+        DialogService.OnClose -= Close;
+
+
+        StateHasChanged();
+    }
+    void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
+    {
+
+
+        StateHasChanged();
+    }
+
+    void Close(dynamic result)
+    {
+
+
+        StateHasChanged();
+    }
+
+    void Fatura()
+    {
+        if (bill != null)
+        {
+            DialogService.Open<Blazor2.Pages.Bill.BillView>($"Fatura Düzenle",
+               new Dictionary<string, object>() { { "Id", bill.Id }, { "SalesId", Sales.Id } },
+               new DialogOptions() { Width = "50%", Height = "60%", Resizable = true, Draggable = false, CloseDialogOnEsc = true });
+        }else
+        {
+            DialogService.Open<Blazor2.Pages.Bill.BillView>($"Fatura Düzenle",
+               new Dictionary<string, object>() { { "Id", 0 }, { "SalesId", Sales.Id } },
+               new DialogOptions() { Width = "50%", Height = "60%", Resizable = true, Draggable = false, CloseDialogOnEsc = true });
+        }
+        
+    }
+}

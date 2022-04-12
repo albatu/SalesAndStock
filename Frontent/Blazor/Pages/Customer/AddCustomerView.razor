@@ -1,0 +1,185 @@
+﻿@using Business.Interfaces
+@using Entities.Entities
+@using Blazor2.Models.Product
+@inject ICustomerService CustomerService
+@inject DialogService DialogService
+@inject IContactService ContactService
+
+<RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px" Text="Müşteri Ekle" Click="@InsertRow" Disabled=@(entityToInsert != null) />
+<RadzenDataGrid @ref="customerGrid" AllowFiltering="true" AllowPaging="true" PageSize="5" AllowSorting="true" EditMode="DataGridEditMode.Single"
+                Data="@customerList" TItem="Customer" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
+    <Columns>
+        <RadzenDataGridColumn TItem="Customer" Property="Id" Title="#Müşteri ID" Width="130px" />
+        <RadzenDataGridColumn TItem="Customer" Property="FirstName" Title="Müşteri Adı" Width="200px">
+            <Template Context="entity">
+                @entity.FirstName
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenTextBox @bind-Value="entity.FirstName" Style="width:100%" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Customer" Property="LastName" Title="Soyadı" Width="200px">
+            <Template Context="entity">
+                @entity.LastName
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenTextBox @bind-Value="entity.LastName" Style="width:100%" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Customer" Context="sampleBlazorModelsSampleOrder" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="450px">
+            <Template Context="entity">
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Class="m-1" Click="@(args => EditRow(entity))" @onclick:stopPropagation="true">
+                </RadzenButton>
+                @{
+                    var contact = ContactService.GetAll().Where(p => p.CustomerId.Id == entity.Id).FirstOrDefault();
+                }
+                @if (contact != null)
+                {
+                    <RadzenButton Text="Müşteri Detaylarını Düzenle." ButtonStyle="ButtonStyle.Primary" Class="m-1" Click="@(args => ContactDetails(entity.Id))" @onclick:stopPropagation="true">
+                    </RadzenButton>
+                }
+                else
+                {
+                    <RadzenButton Text="Müşteri Detaylarını Giriniz." ButtonStyle="ButtonStyle.Primary" Class="m-1" Click="@(args => ContactDetails(entity.Id))" @onclick:stopPropagation="true">
+                    </RadzenButton>
+                }
+
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Primary" Class="m-1" Click="@((args) => SaveRow(entity))">
+                </RadzenButton>
+                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Class="m-1" Click="@((args) => CancelEdit(entity))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Customer" Context="entity" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="60px">
+            <Template Context="entity">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Class="m-1" Click="@(args => DeleteRow(entity))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Class="m-1" Click="@(args => DeleteRow(entity))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    RadzenDataGrid<Customer> customerGrid;
+    IList<Customer> customerList;
+
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        customerList = CustomerService.GetAll();
+
+    }
+
+    async Task EditRow(Customer entity)
+    {
+        await customerGrid.EditRow(entity);
+    }
+
+    void OnUpdateRow(Customer entity)
+    {
+        CustomerService.Update(entity);
+        customerList = CustomerService.GetAll();
+        StateHasChanged();
+    }
+
+    async Task SaveRow(Customer entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        await customerGrid.UpdateRow(entity);
+    }
+
+    void CancelEdit(Customer entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        customerGrid.CancelEditRow(entity);
+
+
+    }
+
+    void DeleteRow(Customer entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        if (customerList.Contains(entity))
+        {
+
+            CustomerService.Delete(entity);
+            customerList = CustomerService.GetAll();
+            StateHasChanged();
+        }
+        else
+        {
+            customerGrid.CancelEditRow(entity);
+        }
+    }
+
+    Customer entityToInsert;
+
+    void InsertRow()
+    {
+        entityToInsert = new Customer();
+        customerGrid.InsertRow(entityToInsert);
+    }
+
+    void OnCreateRow(Customer entity)
+    {
+        CustomerService.Insert(entity);
+        customerList = CustomerService.GetAll();
+        StateHasChanged();
+
+    }
+    void ContactDetails(int customerId)
+    {
+        var customer = CustomerService.GetById(customerId);
+        DialogService.Open<Blazor2.Pages.Customer.ContactDetails>(customer.FirstName + " " + customer.LastName + " adlı kişiyi ait bilgiler",
+                new Dictionary<string, object>(){ { "CustomerId", customerId } },
+                new DialogOptions() { Width = "80%", Height = "60%", Resizable = true, Draggable = false, CloseDialogOnEsc = true });
+        customerList = CustomerService.GetAll();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        // The DialogService is a singleton so it is advisable to unsubscribe.
+        DialogService.OnOpen -= Open;
+        DialogService.OnClose -= Close;
+        customerList = CustomerService.GetAll();
+        StateHasChanged();
+    
+    }
+
+    void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
+    {
+
+        customerList = CustomerService.GetAll();
+        StateHasChanged();
+    }
+
+    void Close(dynamic result)
+    {
+
+        customerList = CustomerService.GetAll();
+        StateHasChanged();
+    }
+
+
+}
