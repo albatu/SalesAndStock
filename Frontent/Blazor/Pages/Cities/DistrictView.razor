@@ -1,0 +1,136 @@
+﻿@using Business.Interfaces
+@using Entities.Entities
+@using Blazor2.Models.Product
+@using Blazor2.Models.City
+@using Blazor2.ViewOperation.Interfaces
+@inject ICityService CityService
+@inject ICityViewService CityViewService
+
+<RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px" Text="İLÇE EKLE" Click="@InsertRow"
+              Disabled=@(entityToInsert != null) />
+<RadzenDataGrid @ref="citiesGrid" AllowFiltering="true" AllowPaging="true" PageSize="5"
+                AllowSorting="true" EditMode="DataGridEditMode.Single" Data="@cityList" TItem="CityViewModel"
+                RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
+    <Columns>
+        <RadzenDataGridColumn TItem="CityViewModel" Property="Id" Title="#İLÇE ID" Width="130px" />
+        <RadzenDataGridColumn TItem="CityViewModel" Property="CityName" Title="ŞEHİR ADI" Width="200px">
+            <Template Context="entity">
+                @entity.CityName
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenTextBox @bind-Value="entity.CityName" Style="width:100%" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="CityViewModel" Context="sampleBlazorModelsSampleOrder" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="120px">
+            <Template Context="entity">
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Class="m-1" Click="@(args => EditRow(entity))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Primary" Class="m-1" Click="@((args) => SaveRow(entity))">
+                </RadzenButton>
+                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Class="m-1" Click="@((args) => CancelEdit(entity))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="CityViewModel" Context="entity" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="60px">
+            <Template Context="entity">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Class="m-1" Click="@(args => DeleteRow(entity))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="entity">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Class="m-1" Click="@(args => DeleteRow(entity))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    [Parameter]
+    public int ParentId { get; set; }
+    RadzenDataGrid<CityViewModel> citiesGrid;
+    IList<CityViewModel> cityList;
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        cityList = CityViewService.District(ParentId);
+
+    }
+
+    async Task EditRow(CityViewModel entity)
+    {
+        await citiesGrid.EditRow(entity);
+    }
+
+    void OnUpdateRow(CityViewModel entity)
+    {
+        entity.ParentId = ParentId;
+        CityService.Update(CityViewService.TEntity(entity));
+        cityList = CityViewService.District(ParentId);
+        StateHasChanged();
+    }
+
+    async Task SaveRow(CityViewModel entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        await citiesGrid.UpdateRow(entity);
+    }
+
+    void CancelEdit(CityViewModel entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        citiesGrid.CancelEditRow(entity);
+
+
+    }
+
+    void DeleteRow(CityViewModel entity)
+    {
+        if (entity == entityToInsert)
+        {
+            entityToInsert = null;
+        }
+
+        if (cityList.Contains(entity))
+        {
+
+            CityService.Delete(CityViewService.TEntity(entity));
+            cityList = CityViewService.District(ParentId);
+            StateHasChanged();
+        }
+        else
+        {
+            citiesGrid.CancelEditRow(entity);
+        }
+    }
+
+    CityViewModel entityToInsert;
+
+    void InsertRow()
+    {
+        entityToInsert = new CityViewModel();
+        citiesGrid.InsertRow(entityToInsert);
+    }
+
+    void OnCreateRow(CityViewModel entity)
+    {
+        entity.ParentId = ParentId;
+
+        CityService.Insert(CityViewService.TEntity(entity));
+        cityList = CityViewService.District(ParentId);
+        StateHasChanged();
+
+    }
+
+
+}

@@ -55,6 +55,11 @@ namespace Business.Managers
             return _stockDal.GetList().Skip(skip).Take(take).ToList();
         }
 
+        public List<Stock> ProductById(int id)
+        {
+            return _stockDal.GetList(p=>p.ProductId.Id == id);
+        }
+
         public List<Stock> Search(string text)
         {
             if (text != null)

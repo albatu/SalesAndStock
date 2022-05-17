@@ -1,6 +1,8 @@
 ﻿@using Blazor2.Models.Stock
 @using Business.Interfaces
 @using Entities.Entities
+@using Blazor2.ViewOperation.Interfaces
+@inject IStockViewService StockViewService
 @inject IStockService StockService
 @inject IProductService ProductService
 @inject NotificationService NotificationService
@@ -16,7 +18,7 @@
                                         Data=@(productList) Style="width: 100%" AllowColumnResize="true" SelectedItem="entity"
                                         TextProperty="ProductName" ValueProperty="ProductId" AllowFilteringByAllStringColumns="true">
                     <Columns>
-                        <RadzenDropDownDataGridColumn Property="Id" Title="Id" Width="100px" />
+                        <RadzenDropDownDataGridColumn Property="ProductId" Title="Id" Width="100px" />
                         <RadzenDropDownDataGridColumn Property="ProductName" Title="Ürün Adı" Width="200px" />
                         <RadzenDropDownDataGridColumn Property="BrandsName" Title="Marka" Width="100px" />
                         <RadzenDropDownDataGridColumn Property="CateogryName" Title="Kategorisi" Width="100px" />
@@ -66,108 +68,32 @@
         if (item == null)
         {
 
-            entity = new StockViewModel()
-            {
-                Id = 0,
-                BrandsId = 0,
-                BrandsName = "",
-                CategoryId = 0,
-                CateogryName ="",
-                Price = 0,
-                Piece = 0,
-                ProductId = 0,
-                ProductName = "",
-                StockDate = DateTime.Now
-            };
+            entity = StockViewService.NewStock();
         }else
         {
-            entity = new StockViewModel
-            {
-                ProductId = item.Id,
-                ProductName = item.Name,
-                BrandsId = item.BrandId.Id,
-                BrandsName = item.BrandId.Name,
-                CategoryId = item.CategoryId.Id,
-                CateogryName = item.CategoryId.Name
-            };
+            entity = StockViewService.Product(item);
         }
-        
 
-        productList = Products().ToList();
+
+        productList = StockViewService.GetProductList();
         if (Id != 0)
         {
-            var stock = StockService.GetById(Id);
-            entity = new StockViewModel
-                {
-                    Id = stock.Id,
-                    BrandsId = stock.ProductId.BrandId.Id,
-                    BrandsName = stock.ProductId.BrandId.Name,
-                    CategoryId = stock.ProductId.CategoryId.Id,
-                    CateogryName = stock.ProductId.CategoryId.Name,
-                    Piece = stock.ProductId.Id,
-                    ProductId = stock.ProductId.Id,
-                    ProductName = stock.ProductId.Name,
-                    StockDate = stock.StockDate
-                };
+
+            entity = StockViewService.GetById(Id);
         }
         else
         {
-            entity = new StockViewModel()
-            {
-                Id = 0,
-                BrandsId = 0,
-                BrandsName = "",
-                CategoryId = 0,
-                CateogryName ="",
-                Price = 0,
-                Piece = 0,
-                ProductId = 0,
-                ProductName = "",
-                StockDate = DateTime.Now
-            };
+            entity = StockViewService.NewStock();
         }
         base.OnInitialized();
     }
 
-    private IEnumerable<StockViewModel> Products()
-    {
-        List<StockViewModel> model = new List<StockViewModel>();
-
-        var products = ProductService.GetAll();
-        foreach (var item in products)
-        {
-             model.Add(new StockViewModel
-            {
-                ProductId = item.Id,
-                ProductName = item.Name,
-                BrandsId = item.BrandId.Id,
-                BrandsName = item.BrandId.Name,
-                CategoryId = item.CategoryId.Id,
-                CateogryName = item.CategoryId.Name
-            });
-        }
-       
-
-
-        return model;
-    }
+   
     void Submit(StockViewModel model)
     {
-        var stock = StockService.Insert(TEntity(model));
+        var stock = StockService.Insert(StockViewService.TEntity(model));
         NotificationService.Notify(NotificationSeverity.Info, stock.ProductId.Name + " üründen toplam:" + stock.Piece.ToString() + " adet ürün eklenmiştir.");
     }
 
-    Stock TEntity(StockViewModel entity)
-    {
-        var product = ProductService.GetById(entity.ProductId);
-
-        return new Stock
-            {
-
-                Id = entity.Id,
-                Piece = entity.Piece,
-                StockDate = entity.StockDate,
-                ProductId = product
-            };
-    }
+  
 }

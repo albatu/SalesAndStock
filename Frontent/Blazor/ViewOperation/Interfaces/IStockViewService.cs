@@ -11,5 +11,9 @@ namespace Blazor2.ViewOperation.Interfaces
         List<StockViewModel> GetProductList();
         List<StockViewModel> DateToDate(DateTime startDate, DateTime finishDate);
         List<StockViewModel> Paging(int skip, int take);
+        StockViewModel GetById(int id);
+        StockViewModel NewStock();
+        StockViewModel Product(Product entity);
+        List<StockViewModel> ProductById(int id);
     }
 }

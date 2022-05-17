@@ -156,22 +156,29 @@
                         <RadzenNumeric Disabled="true" @bind-Value="entity.Price" Style="width:100%" Placeholder="Ürün fiyatı" />
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-lg-4">
-                        <RadzenLabel Text="Ağırlığı veya Litresi  :" />
-                    </div>
-                    <div class="col-lg-8">
-                        @if (entity.WeightUnit)
-                        {
+                @if (entity.WeightUnit)
+                {
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <RadzenLabel Text="Litresi  :" />
+                        </div>
+                        <div class="col-lg-8">
                             <RadzenNumeric Format="0 LT" Disabled="true" @bind-Value="entity.Weight" Style="width:100%" />
-                        }
-                        else
-                        {
-                            <RadzenNumeric Format="0 KG" Disabled="true" @bind-Value="entity.Weight" Style="width:100%" />
-                        }
-
+                        </div>
                     </div>
-                </div>
+                }
+                else
+                {
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <RadzenLabel Text="Ağırlığı :" />
+                        </div>
+                        <div class="col-lg-8">
+                            <RadzenNumeric Format="0 KG" Disabled="true" @bind-Value="entity.Weight" Style="width:100%" />
+                        </div>
+                    </div>
+
+                }
                 <div class="row">
                     <div class="col-lg-4">
                         <RadzenLabel Text="Ağırlık Türü :" />
@@ -228,7 +235,7 @@
             <Template Context="entity">
                 <div class="row">
                     <div class="col-lg-4">
-                        <RadzenLabel Text="Kategori Seç :" />
+                        <RadzenLabel Text="Kategorisi :" />
                     </div>
                     <div class="col-lg-8">
                         <RadzenDropDown @bind-Value="entity.CategoryId" Data="@categoryList" Disabled="true"
@@ -238,7 +245,7 @@
                 </div>
                 <div class="row">
                     <div class="col-lg-4">
-                        <RadzenLabel Text="Vergi Tipi Seç :" />
+                        <RadzenLabel Text="Vergi Oranı :" />
                     </div>
                     <div class="col-lg-8">
 
@@ -246,6 +253,9 @@
                                                 AllowFiltering="true" AllowClear="true" @bind-Value="entity.TaxId" Disabled="true"
                                                 Data=@(taxtList) Style="width: 100%" AllowColumnResize="true"
                                                 TextProperty="Percentile" ValueProperty="TaxId" AllowFilteringByAllStringColumns="true">
+                            <Template Context="context">
+                                % @context.Percentile
+                            </Template>
                             <Columns>
 
                                 <RadzenDropDownDataGridColumn Property="TaxId" Title="Vergi Id" Width="100px" />
@@ -258,7 +268,7 @@
                 </div>
                 <div class="row">
                     <div class="col-lg-4">
-                        <RadzenLabel Text="Marka Seç :" />
+                        <RadzenLabel Text="Marka :" />
                     </div>
                     <div class="col-lg-8">
 

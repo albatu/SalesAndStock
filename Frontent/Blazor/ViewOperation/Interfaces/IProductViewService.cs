@@ -11,6 +11,7 @@ namespace Blazor2.ViewOperation.Interfaces
         List<ProductViewModel> TaxList();
         Product TEntity(ProductViewModel entity);
         List<ProductViewModel> Search(string text);
+        
 
     }
 }

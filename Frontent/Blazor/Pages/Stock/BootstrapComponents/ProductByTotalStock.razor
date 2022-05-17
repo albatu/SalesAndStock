@@ -2,11 +2,11 @@
 @using Entities.Entities
 @inject IStockService StockService
 
-<RadzenButton Icon="privacy_tip" ButtonStyle="ButtonStyle.Danger"  Class="mr-1" Style="width: 100%;">
-    <b>@ProductName</b> Ürünün'den toplam :  
+<RadzenButton Icon="privacy_tip" ButtonStyle="ButtonStyle.Danger" Class="mr-1" Style="width: 100%;">
+    <b>@ProductName</b> Ürünün'den toplam :
     <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@Total.ToString()" />
-     adet Ürün bulunmaktadır. Stokta ki bulunan ürünün adet çarpımı değeri
-     <RadzenBadge Text="@String.Format("{0:C2}", Prices)" BadgeStyle="BadgeStyle.Warning" /> dir.
+    adet Ürün bulunmaktadır. Stokta ki bulunan ürünün adet çarpımı değeri
+    <RadzenBadge Text="@String.Format("{0:C2}", Prices)" BadgeStyle="BadgeStyle.Warning" /> dir.
 </RadzenButton>
 
 
@@ -17,16 +17,22 @@
     [Parameter]
     public string ProductName { get; set; }
     public decimal Prices { get; set; }
+    System.Threading.Timer timer;
     protected override void OnInitialized()
     {
-        var stockStatus = StockService.GetAll().Where(p => p.ProductId.Id == ProductId).Sum(p => p.ProductId.Price * p.Piece);
 
-        Total = StockService.GetAll().Where(p => p.ProductId.Id == ProductId).Sum(p => p.Piece);
-        if (stockStatus < 0)
+        timer = new System.Threading.Timer(async _ =>  // async void
         {
-            Prices = stockStatus * -1;
-        }
-        
+
+            var stockStatus = StockService.GetAll().Where(p => p.ProductId.Id == ProductId).Sum(p => p.ProductId.Price * p.Piece);
+
+            Total = StockService.GetAll().Where(p => p.ProductId.Id == ProductId).Sum(p => p.Piece);
+            if (stockStatus < 0)
+            {
+                Prices = stockStatus * -1;
+            }
+            InvokeAsync(StateHasChanged);
+        }, null, 0, 1000);
         base.OnInitialized();
     }
 }

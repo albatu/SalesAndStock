@@ -5,6 +5,8 @@
 @using Blazor2.Pages.Stock.BootstrapComponents;
 @inject IProductService ProductService
 @inject IStockService StockService
+
+
 <style>
     .rz-panel-titlebar {
         display: flex;
@@ -45,11 +47,11 @@
 <div class="row" style="margin-bottom: 5px; background: #e6ecef; padding-top: 15px; border-radius: 5px; border: 1px solid #ccc;">
     <div class="col-3">
         <div class="card text-dark bg-warning mb-3" style="max-width: 100%;">
-            <div class="card-header"><RadzenIcon Icon="search" /> Ürün Ara</div>
+            <div class="card-header"><RadzenIcon Icon="search" /> Toplam Yapılan Stok Hareketi </div>
             <div class="card-body">
-                <h1 class="card-title"><RadzenTextBox @oninput=@(args => OnChange(args.Value.ToString(), "TextBox with change on every input")) Style="width:100%" /></h1>
+                <h1 class="card-title">@StockService.GetAll().Count()</h1>
 
-                <p>Arama alanı</p>
+                <p>Adet Stok Ekleme Operasyonu Yapılmıştır.</p>
             </div>
         </div>
     </div>
@@ -60,7 +62,7 @@
             <div class="card-header"><RadzenIcon Icon="shopping_cart" /> Stokta Bulunan Toplam Ürün Sayısı</div>
             <div class="card-body">
 
-                <h1 class="card-title">@StockService.GetAll().Count()</h1>
+                <h1 class="card-title">@totalStockProduct</h1>
                 <p>Adet ürün bulunmaktadır.</p>
             </div>
         </div>
@@ -70,43 +72,36 @@
 <StockListView SearchText="@SearchText" />
 
 @code {
-    string pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
-    int pageSize = 6;
-    int count;
-    IEnumerable<Product> orders;
+
+
+    int totalStockProduct = 0;
     decimal totalPrice = 0;
     public string SearchText { get; set; }
     int totalPiece = 0;
-    public bool Status { get; set; }
+    System.Threading.Timer timer;
+
     protected override void OnInitialized()
     {
-        count = ProductService.GetAll().Count();
-        orders = GetOrders(0, pageSize);
+       
+           
+       timer = new System.Threading.Timer(async _ =>  // async void
+    {
         totalPiece = StockService.GetAll().Sum(p => p.Piece);
-        var groupBy = StockService.GetAll().GroupBy(p => p.ProductId);
+            var groupBy = StockService.GetAll().GroupBy(p => p.ProductId);
 
-        foreach (var item in groupBy)
-        {
-            totalPrice += item.FirstOrDefault().ProductId.Price * item.Sum(p => p.Piece);
+            foreach (var item in groupBy)
+            {
+                totalPrice += item.FirstOrDefault().ProductId.Price * item.Sum(p => p.Piece);
 
-        }
-
-    }
-
-
-
-
-    void PageChanged(PagerEventArgs args)
-    {
-
-        orders = GetOrders(args.Skip, args.Top);
+            }
+            totalStockProduct = StockService.GetAll().Select(p => p.ProductId).Distinct().Count();
         InvokeAsync(StateHasChanged);
+    }, null, 0, 1000);
+
+
+
     }
 
-    IEnumerable<Product> GetOrders(int skip, int take)
-    {
-        return ProductService.GetAll().Skip(skip).Take(take).ToList();
-    }
     void OnChange(string value, string name)
     {
         Task.Delay(TimeSpan.FromSeconds(0.3));

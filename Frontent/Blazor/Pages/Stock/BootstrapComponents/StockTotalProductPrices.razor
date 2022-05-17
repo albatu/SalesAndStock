@@ -5,25 +5,34 @@
 @inject IStockService StockService
 
 <div class="col-3">
-        <div class="card text-white bg-secondary mb-3" style="max-width: 100%;">
-            <div class="card-header"><RadzenIcon Icon="payments"/> Stoktaki Ürünlerin Toplam Değeri</div>
-            <div class="card-body">
-                <h1 class="card-title">@String.Format("{0:C2}", TotalPiece)</h1>
-                <p>değerindedir.</p>
-            </div>
+    <div class="card text-white bg-secondary mb-3" style="max-width: 100%;">
+        <div class="card-header"><RadzenIcon Icon="payments" /> Stoktaki Ürünlerin Toplam Değeri</div>
+        <div class="card-body">
+            <h1 class="card-title">@String.Format("{0:C2}", TotalPiece)</h1>
+            <p>değerindedir.</p>
         </div>
     </div>
+</div>
 
 @code {
     public decimal TotalPiece { get; set; }
+    System.Threading.Timer timer;
     protected override void OnInitialized()
     {
-        var groupBy = StockService.GetAll().GroupBy(p => p.ProductId);
-        foreach (var item in groupBy)
+        
+        timer = new System.Threading.Timer(async _ =>  // async void
         {
-            TotalPiece += item.FirstOrDefault().ProductId.Price * item.Sum(p => p.Piece);
+            TotalPiece = 0;
+            var groupBy = StockService.GetAll().GroupBy(p => p.ProductId);
+            foreach (var item in groupBy)
+            {
+                TotalPiece += item.FirstOrDefault().ProductId.Price * item.Sum(p => p.Piece);
 
-        }
+            }
+            
+            await InvokeAsync(StateHasChanged);
+        }, null, 0, 1000);
+
 
     }
 }

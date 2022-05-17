@@ -18,5 +18,6 @@ namespace Business.Interfaces
         List<Stock> DateToDate(DateTime startDate, DateTime finishDate);
         void Delete(Stock entity);
         List<Stock> Paging(int skip, int take);
+        List<Stock> ProductById(int id);
     }
 }

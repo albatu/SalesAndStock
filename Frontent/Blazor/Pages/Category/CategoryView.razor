@@ -8,8 +8,8 @@
 <RadzenDataGrid @ref="stockGrid" AllowFiltering="true" AllowPaging="true" PageSize="5" AllowSorting="true" EditMode="DataGridEditMode.Single"
                 Data="@categoriesList" TItem="Category" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
     <Columns>
-        <RadzenDataGridColumn TItem="Category" Property="Id" Title="#ÜRÜN ID" Width="130px" />
-        <RadzenDataGridColumn TItem="Category" Property="Name" Title="ÜRÜN ADI" Width="200px">
+        <RadzenDataGridColumn TItem="Category" Property="Id" Title="#KATEGORİ ID" Width="130px" />
+        <RadzenDataGridColumn TItem="Category" Property="Name" Title="KATEGORİ ADI" Width="200px">
             <Template Context="entity">
                 @entity.Name
             </Template>

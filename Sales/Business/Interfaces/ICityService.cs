@@ -17,5 +17,6 @@ namespace Business.Interfaces
         void Delete(City entity);
         List<City> District(int id);
         List<City> OnlyCity();
+        List<City> District();
     }
 }

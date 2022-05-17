@@ -26,7 +26,10 @@ namespace Business.Managers
         {
             return _cityDal.GetList(p=>p.DistrictId==id);
         }
-
+        public List<City> District()
+        {
+            return _cityDal.GetList(p => p.DistrictId !=0);
+        }
         public List<City> GetAll()
         {
             return _cityDal.GetList();

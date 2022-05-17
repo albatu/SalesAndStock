@@ -4,9 +4,11 @@
 @using Blazor2.Pages.Sales
 @using Blazor2.Pages.Product
 @using Blazor2.Pages.Customer
+@using Blazor2.Components
 @inject ICategoryService CategoryService
 @page "/"
 <Style />
+<MegaMenu />
 <RadzenTabs Change=@OnChange TabPosition="@tabPosition" style="height: 100%; width: 100%; margin: 20px auto;" RenderMode="TabRenderMode.Client">
     <Tabs>
         <RadzenTabsItem Text="Stok İşlemleri">

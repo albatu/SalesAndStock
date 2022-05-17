@@ -1,0 +1,43 @@
+﻿@inject DialogService DialogService
+<RadzenCard Style="width:100%" Class="mt-3 mx-auto">
+    <RadzenMenu>
+            <RadzenMenuItem Text="Şehir İşlemleri" Icon="home">
+                <RadzenMenuItem Text="Şehirler" Icon="account_circle" Click="()=>OnParentClicked()"></RadzenMenuItem>
+            </RadzenMenuItem>
+            <RadzenMenuItem Text="Müşteri İşlemleri" Icon="payment">
+                <RadzenMenuItem Text="Müşteriler" Path="checkbox" Icon="check_circle"></RadzenMenuItem>
+                
+            </RadzenMenuItem>
+            <RadzenMenuItem Text="İstatistik Bilgileri" Icon="save">
+                <RadzenMenuItem Text="Stok İstatistikleri" Path="datagrid" Icon="grid_on"></RadzenMenuItem>
+                <RadzenMenuItem Text="Satış İstatistikleri" Path="datalist" Icon="list"></RadzenMenuItem>
+                <RadzenMenuItem Text="Müşteri İstatistikleri" Path="dropdown" Icon="dns"></RadzenMenuItem>
+                <RadzenMenuItem Text="Ürün İstatistikleri" Path="dropdown-datagrid" Icon="receipt"></RadzenMenuItem>
+                
+            </RadzenMenuItem>
+            <RadzenMenuItem Text="Yönetici İşlemleri" Icon="account_box">
+                <RadzenMenuItem Text="Yönetiler" Path="tabs" Icon="tab"></RadzenMenuItem>
+                <RadzenMenuItem Text="Roller" Path="panel" Icon="content_paste"></RadzenMenuItem>
+            </RadzenMenuItem>
+         
+    </RadzenMenu>
+</RadzenCard>
+
+@code {
+    //EventConsole console;
+
+    void OnParentClicked()
+    {
+         DialogService.Open<Blazor2.Pages.Cities.CityView>($"Şehir Ekle",
+                new Dictionary<string, object>() /*{ { "Id", entity.Id } }*/,
+                new DialogOptions() { Width = "50%", Height = "60%", Resizable = true, Draggable = false, CloseDialogOnEsc = true });
+        //salesList = SalesViewService.GetSalesList();
+
+        StateHasChanged();
+    }
+
+    void OnChildClicked(MenuItemEventArgs args)
+    {
+        //console.Log($"{args.Text} from child clicked");
+    }
+}

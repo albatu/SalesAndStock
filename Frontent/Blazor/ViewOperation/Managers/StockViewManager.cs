@@ -41,6 +41,23 @@ namespace Blazor2.ViewOperation.Managers
             return list;
         }
 
+        public StockViewModel GetById(int id)
+        {
+            var stock = _stockService.GetById(id);
+            return new StockViewModel
+           {
+               Id = stock.Id,
+               BrandsId = stock.ProductId.BrandId.Id,
+               BrandsName = stock.ProductId.BrandId.Name,
+               CategoryId = stock.ProductId.CategoryId.Id,
+               CateogryName = stock.ProductId.CategoryId.Name,
+               Piece = stock.ProductId.Id,
+               ProductId = stock.ProductId.Id,
+               ProductName = stock.ProductId.Name,
+               StockDate = stock.StockDate
+           };
+        }
+
         public List<StockViewModel> GetProductList()
         {
             List<StockViewModel> productList = new List<StockViewModel>();
@@ -49,6 +66,10 @@ namespace Blazor2.ViewOperation.Managers
             {
                 productList.Add(new StockViewModel
                 {
+                    BrandsId = item.BrandId.Id,
+                    BrandsName = item.BrandId.Name,
+                    CategoryId = item.CategoryId.Id,
+                    CateogryName = item.CategoryId.Name,
                     ProductId = item.Id,
                     ProductName = item.Name
                 });
@@ -80,6 +101,22 @@ namespace Blazor2.ViewOperation.Managers
             return list;
         }
 
+        public StockViewModel NewStock()
+        {
+            return new StockViewModel()
+            {
+                Id = 0,
+                BrandsId = 0,
+                BrandsName = "",
+                CategoryId = 0,
+                CateogryName = "",
+                Price = 0,
+                Piece = 0,
+                ProductId = 0,
+                ProductName = "",
+                StockDate = DateTime.Now
+            };
+        }
 
         public List<StockViewModel> Paging(int skip, int take)
         {
@@ -89,6 +126,45 @@ namespace Blazor2.ViewOperation.Managers
             {
                 list.Add(new StockViewModel
                 {
+                    Id = item.Id,
+                    BrandsId = item.ProductId.BrandId.Id,
+                    BrandsName = item.ProductId.BrandId.Name,
+                    CategoryId = item.ProductId.CategoryId.Id,
+                    CateogryName = item.ProductId.CategoryId.Name,
+                    Piece = item.Piece,
+                    ProductId = item.ProductId.Id,
+                    ProductName = item.ProductId.Name,
+                    StockDate = item.StockDate,
+                    Price = item.ProductId.Price
+
+                });
+            }
+            return list;
+        }
+
+        public StockViewModel Product(Product item)
+        {
+            return new StockViewModel
+            {
+                ProductId = item.Id,
+                ProductName = item.Name,
+                BrandsId = item.BrandId.Id,
+                BrandsName = item.BrandId.Name,
+                CategoryId = item.CategoryId.Id,
+                CateogryName = item.CategoryId.Name
+            };
+        }
+
+        public List<StockViewModel> ProductById(int id)
+        {
+            var stockById = _stockService.ProductById(id);
+            List<StockViewModel> list = new List<StockViewModel>();
+
+            foreach (var item in stockById)
+            {
+                list.Add(new StockViewModel {
+
+
                     Id = item.Id,
                     BrandsId = item.ProductId.BrandId.Id,
                     BrandsName = item.ProductId.BrandId.Name,

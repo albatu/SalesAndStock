@@ -66,13 +66,34 @@
     <div class="col-lg-2">
         <RadzenButton Click="@LastPage" Text="Son Sayfa" Class="mr-2" ButtonStyle="ButtonStyle.Secondary" Style="width:100%" />
     </div>
-    <div class="col-lg-2">
-        <RadzenLabel Text="Show pager summary" Component="CheckBox1" Style="margin-left: 5px;"/>
-        
-    </div>
-    <div class="col-lg-2">
-            <RadzenSwitch @bind-Value=@showPagerSummary  />
+    <div class="col-lg-2" style="background: #479cc8;border-radius: 3px; padding-top: 5px; color: white;">
 
+        <div class="row">
+            <div class="col-lg-8">
+                <RadzenLabel Text="Göster:" Component="CheckBox1" Style="margin-left: 5px;" />
+            </div>
+            <div class="col-lg-4">
+                <RadzenCheckBox @bind-Value="@showPagerSummary" />
+            </div>
+        </div>
+
+
+    </div>
+
+    <div class="col-lg-4">
+
+        <RadzenDropDownDataGrid TValue="int" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                AllowFiltering="true" AllowClear="true" @bind-Value="Id" Change="Change"
+                                Data=@(productsList) Style="width: 100%" AllowColumnResize="true" Placeholder="Ürüne Göre Listele"
+                                TextProperty="ProductName" ValueProperty="ProductId" AllowFilteringByAllStringColumns="true">
+
+            <Columns>
+                <RadzenDropDownDataGridColumn Property="ProductId" Title="Id" Width="100px" />
+                <RadzenDropDownDataGridColumn Property="ProductName" Title="Ürün Adı" Width="200px" />
+                <RadzenDropDownDataGridColumn Property="BrandsName" Title="Markası" Width="100px" />
+                <RadzenDropDownDataGridColumn Property="CateogryName" Title="Kategorisi" Width="100px" />
+            </Columns>
+        </RadzenDropDownDataGrid>
     </div>
 
 </div>
@@ -147,6 +168,10 @@
         </RadzenDataGridColumn>
     </Columns>
 </RadzenDataGrid>
+
+<CascadingValue Value="@Status">
+
+</CascadingValue>
 @code {
     [Parameter]
     public string SearchText { get; set; }
@@ -156,13 +181,15 @@
     IEnumerable<StockViewModel> stockList;
     IEnumerable<StockViewModel> productsList;
     string ProductName;
-    IEnumerable<int> pageSizeOptions = new int[] { 3, 5, 7 };
-    string pagingSummaryFormat = "{0} sayfadan {1} görüntüleniyor (toplam {2} kayıt bulunmaktadır.)";
+    IEnumerable<int> pageSizeOptions = new int[] { 10, 50, 100 };
 
+    public int Id { get; set; }
     bool showPagerSummary = true;
 
     public DateTime StartDate { get; set; } = DateTime.Now.AddDays(-15);
     public DateTime FinishDate { get; set; } = DateTime.Now;
+
+    public bool Status { get; set; }
     async Task FirstPage()
     {
         await stockGrid.FirstPage();
@@ -175,9 +202,11 @@
     {
         await stockGrid.LastPage();
     }
+    int count = 0;
+    string pagingSummaryFormat = "{0} sayfadan {1} görüntüleniyor (toplam {2} kayıt bulunmaktadır.)";
     protected override void OnInitialized()
     {
-
+        Status = true;
         stockList = StockViewService.Search(SearchText);
         productsList = StockViewService.GetProductList();
         DialogService.OnOpen += Open;
@@ -213,6 +242,8 @@
                 new DialogOptions() { Width = "50%", Height = "60%", Resizable = true, Draggable = false, CloseDialogOnEsc = true });
         stockList = StockViewService.Search(SearchText);
         productsList = StockViewService.GetProductList();
+        Status = true;
+
         StateHasChanged();
     }
 
@@ -269,8 +300,22 @@
 
     void OnPage(PagerEventArgs args)
     {
-        
+
         //stockList = StockViewService.Paging(args.Skip, args.Top);
         StateHasChanged();
+    }
+    void Change()
+    {
+        stockList = StockViewService.ProductById(Id);
+        count = StockViewService.ProductById(Id).Sum(p=>p.Piece);
+        var product = ProductService.GetById(Id);
+      
+        if (count != 0)
+        {
+            pagingSummaryFormat = "";
+            pagingSummaryFormat += " "+product.Name +" ürününden"+" adet: " + count +" bulunmaktadır.";
+             StateHasChanged();
+        }
+        
     }
 }

@@ -62,7 +62,7 @@ builder.Services.AddScoped<ISalesViewService, SalesViewManager>();
 builder.Services.AddScoped<IProductViewService, ProductViewManager>();
 builder.Services.AddScoped<IStockViewService, StockViewManager>();
 builder.Services.AddScoped<IContactDetailViewService, ContactDetailViewManager>();
-
+builder.Services.AddScoped<ICityViewService, CityViewManager>();
 #endregion
 var app = builder.Build();
 
